@@ -72,7 +72,14 @@
           <div class="muted small">進捗</div>
           <div class="muted small"><span id="progressText">0 / 100</span></div>
         </div>
-        <div class="progress" aria-hidden="true"><div id="bar" class="bar"></div></div>
+        <div class="progress" aria-hidden="true">
+          <div id="bar" class="bar">
+            <!-- ▼ 画像表示（札番号.png を表示） -->
+            <div class="imgwrap">
+              <img id="cardImg" alt="札画像" />
+            </div>
+          </div>
+        </div>
 
         <form id="answerForm" style="margin-top:16px;">
           <div class="inputrow">
@@ -93,10 +100,7 @@
         </div>
       </div>
 
-<!-- ▼ 画像表示（札番号.png を表示） -->
-<div class="imgwrap">
-  <img id="cardImg" alt="札画像" />
-</div>
+
 
 
 
