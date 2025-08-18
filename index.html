@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <title>百人一首 決まり字トレーナー (JS版)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { --bg:#0f172a; --card:#111827; --ink:#e5e7eb; --sub:#9ca3af; --ok:#10b981; --ng:#ef4444; --accent:#6366f1; }
+    *{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#0b1220,#0f172a 30%,#0b1220);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .wrap{width:min(920px,100%);display:grid;gap:16px}
+    .title{font-size:24px;font-weight:700;letter-spacing:.02em}
+    .grid{display:grid;grid-template-columns:1fr;gap:16px}
+    .card{background:var(--card);border:1px solid #1f2937;border-radius:16px;padding:20px;box-shadow:0 10px 25px rgba(0,0,0,.25)}
+    .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+    .pill{padding:6px 10px;border-radius:999px;background:#0b1220;border:1px solid #253047;color:var(--sub);font-size:12px}
+    .id{font-size:40px;font-weight:800;letter-spacing:.06em}
+    .muted{color:var(--sub)}
+    .progress{height:8px;background:#0b1220;border:1px solid #263042;border-radius:999px;overflow:hidden}
+    .bar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),#14b8a6)}
+    .inputrow{display:flex;gap:12px;align-items:center}
+    input[type="text"]{flex:1;min-width:140px;background:#0b1220;border:1px solid #263042;color:var(--ink);padding:12px 14px;border-radius:12px;font-size:16px;outline:none}
+    input[type="text"]:focus{border-color:#334155;box-shadow:0 0 0 4px rgba(99,102,241,.15)}
+    button{background:var(--accent);color:white;border:none;border-radius:12px;padding:12px 16px;font-size:15px;font-weight:700;cursor:pointer}
+    button.secondary{background:#182033}
+    .result{font-size:16px}
+    .ok{color:var(--ok);font-weight:700}
+    .ng{color:var(--ng);font-weight:700}
+    .small{font-size:12px;color:var(--sub)}
+    .footer{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    details summary{cursor:pointer;color:#cbd5e1}
+    .kbd{border:1px solid #374151;background:#0b1220;border-radius:6px;padding:2px 6px}
+    @media (min-width:720px){ .grid{grid-template-columns:2fr 1fr} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title">百人一首 決まり字トレーナー（残り札で最短一意判定）</div>
+    <div class="grid">
+      <div class="card">
+        <div class="row" style="justify-content:space-between;">
+          <div>
+            <div class="muted small">現在の出題（札番号）</div>
+            <div class="id mono" id="qid">-</div>
+          </div>
+          <div>
+            <div class="pill" id="statusPill">未開始</div>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px;">
+          <div class="muted small">進捗</div>
+          <div class="muted small"><span id="progressText">0 / 100</span></div>
+        </div>
+        <div class="progress" aria-hidden="true"><div id="bar" class="bar"></div></div>
+
+        <form id="answerForm" style="margin-top:16px;">
+          <div class="inputrow">
+            <input id="answerInput" type="text" placeholder="ここに最短の決まり字を入力（Enter可）" autocomplete="off" />
+            <button type="submit">答える</button>
+            <button type="button" class="secondary" id="skipBtn" title="答えずに次の出題へ">スキップ</button>
+          </div>
+        </form>
+
+        <div class="result" id="result" style="margin-top:10px;"></div>
+        <div class="small" style="margin-top:8px;">※ 判定は「<b>最短</b>の決まり字」との完全一致です。最短より長くても短くても <span class="ng">NG</span> になります。</div>
+
+        <div class="footer" style="margin-top:16px;">
+          <div class="small">残り札：<span id="remain">100</span> 枚</div>
+          <div class="row">
+            <button type="button" class="secondary" id="resetBtn">リセット</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="muted small" style="margin-bottom:8px;">説明</div>
+        <div class="small">
+          読まれた札（内部的に対応する先頭文字列 <code class="kbd">s</code>）について、場に残っている他札との
+          先頭一致長 <code class="kbd">LCP</code> の最大値を取り、必要文字数を
+          <code class="kbd">need = maxL + 1</code>（ただし <code class="kbd">need ≤ |s|</code>）として「最短で一意になる接頭辞」を正解とします。
+        </div>
+        <details style="margin-top:10px;">
+          <summary>デバッグ（固定決まり字の一覧を表示）</summary>
+          <div id="list" class="small" style="margin-top:8px;max-height:260px;overflow:auto;"></div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ====== カード定義（id と固定の「全札前提の決まり字」）======
+    const CARDS = [
+      {id:87, s:"む"},{id:18, s:"す"},{id:57, s:"め"},{id:22, s:"ふ"},{id:70, s:"さ"},{id:81, s:"ほ"},{id:77, s:"せ"},
+      {id:74, s:"うか"},{id:65, s:"うら"},{id:23, s:"つき"},{id:13, s:"つく"},{id:40, s:"しの"},{id:37, s:"しら"},{id:100, s:"もも"},{id:66, s:"もろ"},{id:71, s:"ゆう"},{id:46, s:"ゆら"},
+      {id:61, s:"いに"},{id:21, s:"いまこ"},{id:63, s:"いまは"},{id:75, s:"ちぎりお"},{id:42, s:"ちぎりき"},{id:17, s:"ちは"},
+      {id:33, s:"ひさ"},{id:35, s:"ひとは"},{id:99, s:"ひとも"},{id:50, s:"きみがためお"},{id:15, s:"きみがためは"},{id:91, s:"きり"},
+      {id:96, s:"はなさ"},{id:9, s:"はなの"},{id:2, s:"はるす"},{id:67, s:"はるの"},{id:47, s:"やえ"},{id:59, s:"やす"},{id:32, s:"やまが"},{id:28, s:"やまざ"},
+      {id:93, s:"よのなかは"},{id:83, s:"よのなかよ"},{id:85, s:"よも"},{id:62, s:"よを"},{id:51, s:"かく"},{id:6, s:"かさ"},{id:98, s:"かぜそ"},{id:48, s:"かぜを"},
+      {id:49, s:"みかき"},{id:27, s:"みかの"},{id:90, s:"みせ"},{id:14, s:"みち"},{id:94, s:"みよ"},
+      {id:73, s:"たか"},{id:55, s:"たき"},{id:4, s:"たご"},{id:16, s:"たち"},{id:89, s:"たま"},{id:34, s:"たれ"},
+      {id:41, s:"こい"},{id:29, s:"こころあ"},{id:68, s:"こころに"},{id:97, s:"こぬ"},{id:24, s:"この"},{id:10, s:"これ"},
+      {id:60, s:"おおえ"},{id:95, s:"おおけ"},{id:44, s:"おおこ"},{id:5, s:"おく"},{id:26, s:"おぐ"},{id:72, s:"おと"},{id:82, s:"おも"},
+      {id:8, s:"わがい"},{id:92, s:"わがそ"},{id:38, s:"わすら"},{id:54, s:"わすれ"},{id:76, s:"わたのはらこ"},{id:11, s:"わたのはらや"},{id:20, s:"わび"},
+      {id:80, s:"ながか"},{id:84, s:"ながら"},{id:53, s:"なげき"},{id:86, s:"なげけ"},{id:36, s:"なつ"},{id:25, s:"なにし"},{id:88, s:"なにわえ"},{id:19, s:"なにわが"},
+      {id:43, s:"あい"},{id:79, s:"あきか"},{id:1, s:"あきの"},{id:52, s:"あけ"},{id:39, s:"あさじ"},{id:31, s:"あさぼらけあ"},{id:64, s:"あさぼらけう"},
+      {id:3, s:"あし"},{id:12, s:"あまつ"},{id:7, s:"あまの"},{id:56, s:"あらざ"},{id:69, s:"あらし"},{id:30, s:"ありあ"},{id:58, s:"ありま"},{id:78, s:"あわじ"},{id:45, s:"あわれ"}
+    ];
+
+    // ====== 文字単位ユーティリティ（UTF-8/16のサロゲート対策に Array.from を使う）======
+    const toChars = (s) => Array.from(s); // code point 単位
+    const lcpChars = (a, b) => {
+      const ca = toChars(a), cb = toChars(b);
+      const n = Math.min(ca.length, cb.length);
+      let i = 0;
+      while (i < n && ca[i] === cb[i]) i++;
+      return i;
+    };
+    const prefixChars = (s, k) => {
+      const cs = toChars(s);
+      if (k > cs.length) k = cs.length;
+      return cs.slice(0, k).join("");
+    };
+
+    // ====== 状態 ======
+    let remaining = [];               // 残り札（Card配列）
+    let id2s = new Map();             // id -> s
+    let reads = [];                   // シャッフル済みの 1..100
+    let idx = 0;                      // 現在の出題インデックス
+
+    // ====== DOM ======
+    const qidEl = document.getElementById("qid");
+    const resultEl = document.getElementById("result");
+    const progressTextEl = document.getElementById("progressText");
+    const barEl = document.getElementById("bar");
+    const remainEl = document.getElementById("remain");
+    const statusPill = document.getElementById("statusPill");
+    const formEl = document.getElementById("answerForm");
+    const inputEl = document.getElementById("answerInput");
+    const resetBtn = document.getElementById("resetBtn");
+    const skipBtn = document.getElementById("skipBtn");
+    const listEl = document.getElementById("list");
+
+    // ====== ヘルパ ======
+    const shuffle = (arr) => {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    };
+
+    const expectedPrefix = (s) => {
+      let maxL = 0;
+      for (const t of remaining) {
+        if (t.s === s) continue;
+        const l = lcpChars(s, t.s);
+        if (l > maxL) maxL = l;
+      }
+      const need = Math.min(toChars(s).length, maxL + 1);
+      return prefixChars(s, need);
+    };
+
+    const removeById = (id) => {
+      const k = remaining.findIndex(c => c.id === id);
+      if (k >= 0) remaining.splice(k, 1);
+    };
+
+    const currentId = () => reads[idx];
+    const curS = () => id2s.get(currentId());
+
+    const updateProgress = () => {
+      progressTextEl.textContent = `${idx} / 100`;
+      const pct = (idx / 100) * 100;
+      barEl.style.width = `${pct}%`;
+      remainEl.textContent = remaining.length.toString();
+    };
+
+    const renderList = () => {
+      // デバッグ用一覧
+      const rows = CARDS
+        .slice()
+        .sort((a,b) => a.id - b.id)
+        .map(c => `<div><span class="mono">#${String(c.id).padStart(3,"0")}</span>：${c.s}</div>`)
+        .join("");
+      listEl.innerHTML = rows;
+    };
+
+    const showQuestion = () => {
+      if (idx >= reads.length) {
+        qidEl.textContent = "終了";
+        statusPill.textContent = "完了";
+        resultEl.innerHTML = `<span class="ok">お疲れさまでした！</span> 全問終了です。`;
+        inputEl.disabled = true;
+        return;
+      }
+      qidEl.textContent = String(currentId());
+      statusPill.textContent = "出題中";
+      resultEl.textContent = "";
+      inputEl.value = "";
+      inputEl.focus();
+      updateProgress();
+    };
+
+
+// ====== 追加：自動で次へ進むまでの待ち時間（ミリ秒）。0にすると自動で進まない ======
+const AUTO_NEXT_MS = 0;
+
+// 置き換え：submitAnswer（判定を表示→少し待ってから次へ）
+const submitAnswer = () => {
+  if (idx >= reads.length) return;
+
+  const s = curS();
+  if (!s) {
+    resultEl.innerHTML = `<span class="ng">データ不整合</span>：このIDの札が見つかりません`;
+    return;
+  }
+
+  const expect = expectedPrefix(s);
+  const user = inputEl.value.trim();
+
+  if (user === expect) {
+    resultEl.innerHTML = `<span class="ok">OK</span>`;
+    statusPill.textContent = "判定：正解";
+  } else {
+    resultEl.innerHTML = `<span class="ng">NG</span>：正解は <b class="mono">${expect}</b>`;
+    statusPill.textContent = "判定：不正解";
+  }
+
+  // 判定中は入力をロック
+  inputEl.disabled = true;
+
+  const goNext = () => {
+    // 札を場から除外して次へ
+    removeById(currentId());
+    idx++;
+    inputEl.disabled = false;
+    showQuestion();
+  };
+
+  if (AUTO_NEXT_MS > 0) {
+    setTimeout(goNext, AUTO_NEXT_MS);
+  } else {
+    // 手動進行にしたい場合は、スキップ（次へ）ボタンで進める
+    // ここではボタンのラベルを一時的に「次へ」にする例
+    skipBtn.textContent = "次へ";
+    const once = () => { skipBtn.removeEventListener("click", once); skipBtn.textContent = "スキップ"; goNext(); };
+    skipBtn.addEventListener("click", once);
+  }
+};
+
+// （参考）showQuestion は既存のままでOK。
+// その中の resultEl をクリアする処理は「次の問題を表示するとき」に走るので、
+// 今回の修正（次へ進む前に少し待つ）と競合しません。
+
+
+
+
+
+
+    const skipQuestion = () => {
+      if (idx >= reads.length) return;
+      // スキップしても札は場から除外（C++版に近い流れで学習を進める／必要なら外してOK）
+      removeById(currentId());
+      idx++;
+      showQuestion();
+    };
+
+    const resetAll = () => {
+      // 状態初期化
+      remaining = CARDS.slice();
+      id2s = new Map(CARDS.map(c => [c.id, c.s]));
+      reads = shuffle(Array.from({length:100}, (_,i)=>i+1));
+      idx = 0;
+      inputEl.disabled = false;
+      statusPill.textContent = "準備完了";
+      updateProgress();
+      showQuestion();
+    };
+
+    // ====== イベント ======
+    formEl.addEventListener("submit", (e) => { e.preventDefault(); submitAnswer(); });
+    resetBtn.addEventListener("click", resetAll);
+    skipBtn.addEventListener("click", skipQuestion);
+
+    // ====== 起動 ======
+    renderList();
+    resetAll();
+  </script>
+</body>
+</html>
