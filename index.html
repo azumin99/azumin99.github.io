@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <title>決まり字変化トレーニング</title>
+  <title>競技かるた 決まり字変化トレーニング</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root { --bg:#0f172a; --card:#111827; --ink:#e5e7eb; --sub:#9ca3af; --ok:#10b981; --ng:#ef4444; --accent:#6366f1; }
@@ -55,7 +55,7 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="title">競技かるた 決まり字変化 トレーニング</div>
+    <div class="title">競技かるた 決まり字変化トレーニング (WEB版)</div>
     <div class="grid">
       <div class="card">
         <div class="row" style="justify-content:space-between;">
@@ -98,9 +98,15 @@
   <img id="cardImg" alt="札画像" />
 </div>
       <div class="card">
+        <div class="muted small" style="margin-bottom:8px;">説明</div>
+        <div class="small">
+          読まれた札（内部的に対応する先頭文字列 <code class="kbd">s</code>）について、場に残っている他札との
+          先頭一致長 <code class="kbd">LCP</code> の最大値を取り、必要文字数を
+          <code class="kbd">need = maxL + 1</code>（ただし <code class="kbd">need ≤ |s|</code>）として「最短で一意になる接頭辞」を正解とします。
+        </div>
         <details style="margin-top:10px;">
           <summary>デバッグ（固定決まり字の一覧を表示）</summary>
-          <div id="list" class="small" style="margin-top:8px;max-height:460px;overflow:auto;"></div>
+          <div id="list" class="small" style="margin-top:8px;max-height:260px;overflow:auto;"></div>
         </details>
       </div>
     </div>
