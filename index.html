@@ -31,6 +31,25 @@
     details summary{cursor:pointer;color:#cbd5e1}
     .kbd{border:1px solid #374151;background:#0b1220;border-radius:6px;padding:2px 6px}
     @media (min-width:720px){ .grid{grid-template-columns:2fr 1fr} }
+
+    /* ▼ 画像表示用を追加 */
+    .imgwrap{
+      margin-top:12px;
+      background:#0b1220;
+      border:1px solid #263042;
+      border-radius:12px;
+      padding:8px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:220px; /* 画像がない瞬間も高さを保つ */
+    }
+    .imgwrap img{
+      max-width:100%;
+      max-height:360px;
+      display:block;
+      border-radius:8px;
+    }
   </style>
 </head>
 <body>
@@ -53,6 +72,11 @@
           <div class="muted small"><span id="progressText">0 / 100</span></div>
         </div>
         <div class="progress" aria-hidden="true"><div id="bar" class="bar"></div></div>
+
+        <!-- ▼ 画像表示（追加） -->
+        <div class="imgwrap">
+          <img id="cardImg" alt="札画像" />
+        </div>
 
         <form id="answerForm" style="margin-top:16px;">
           <div class="inputrow">
@@ -140,6 +164,7 @@
     const resetBtn = document.getElementById("resetBtn");
     const skipBtn = document.getElementById("skipBtn");
     const listEl = document.getElementById("list");
+    const imgEl = document.getElementById("cardImg"); // ▼ 追加：画像要素
 
     // ====== ヘルパ ======
     const shuffle = (arr) => {
@@ -186,77 +211,91 @@
       listEl.innerHTML = rows;
     };
 
+    // ▼ 追加：次の画像を軽くプリロード（体感向上用・任意）
+    const preloadNext = () => {
+      if (idx + 1 < reads.length) {
+        const img = new Image();
+        img.src = `${reads[idx + 1]}.png`;
+      }
+    };
+
     const showQuestion = () => {
       if (idx >= reads.length) {
         qidEl.textContent = "終了";
         statusPill.textContent = "完了";
         resultEl.innerHTML = `<span class="ok">お疲れさまでした！</span> 全問終了です。`;
         inputEl.disabled = true;
+        imgEl.removeAttribute("src"); // 最後は画像を消す（任意）
+        imgEl.alt = "";
+        imgEl.style.visibility = "hidden";
         return;
       }
-      qidEl.textContent = String(currentId());
+
+      const id = String(currentId());
+      qidEl.textContent = id;
       statusPill.textContent = "出題中";
       resultEl.textContent = "";
       inputEl.value = "";
       inputEl.focus();
       updateProgress();
+
+      // ▼ 画像の切り替え（ID.png）
+      imgEl.style.visibility = "hidden";     // 読み込み中は隠す
+      imgEl.onload = () => { imgEl.style.visibility = "visible"; };
+      imgEl.onerror = () => {                // 見つからない場合も枠は表示
+        imgEl.style.visibility = "visible";
+        // alt だけ表示（404画像アイコンはブラウザ依存で表示されます）
+      };
+      imgEl.src = `${id}.png`;
+      imgEl.alt = `札画像 ${id}.png`;
+
+      preloadNext();
     };
 
+    // ====== 追加：自動で次へ進むまでの待ち時間（ミリ秒）。0にすると自動で進まない ======
+    const AUTO_NEXT_MS = 0;
 
-// ====== 追加：自動で次へ進むまでの待ち時間（ミリ秒）。0にすると自動で進まない ======
-const AUTO_NEXT_MS = 0;
+    // 置き換え：submitAnswer（判定を表示→少し待ってから次へ）
+    const submitAnswer = () => {
+      if (idx >= reads.length) return;
 
-// 置き換え：submitAnswer（判定を表示→少し待ってから次へ）
-const submitAnswer = () => {
-  if (idx >= reads.length) return;
+      const s = curS();
+      if (!s) {
+        resultEl.innerHTML = `<span class="ng">データ不整合</span>：このIDの札が見つかりません`;
+        return;
+      }
 
-  const s = curS();
-  if (!s) {
-    resultEl.innerHTML = `<span class="ng">データ不整合</span>：このIDの札が見つかりません`;
-    return;
-  }
+      const expect = expectedPrefix(s);
+      const user = inputEl.value.trim();
 
-  const expect = expectedPrefix(s);
-  const user = inputEl.value.trim();
+      if (user === expect) {
+        resultEl.innerHTML = `<span class="ok">OK</span>`;
+        statusPill.textContent = "判定：正解";
+      } else {
+        resultEl.innerHTML = `<span class="ng">NG</span>：正解は <b class="mono">${expect}</b>`;
+        statusPill.textContent = "判定：不正解";
+      }
 
-  if (user === expect) {
-    resultEl.innerHTML = `<span class="ok">OK</span>`;
-    statusPill.textContent = "判定：正解";
-  } else {
-    resultEl.innerHTML = `<span class="ng">NG</span>：正解は <b class="mono">${expect}</b>`;
-    statusPill.textContent = "判定：不正解";
-  }
+      // 判定中は入力をロック
+      inputEl.disabled = true;
 
-  // 判定中は入力をロック
-  inputEl.disabled = true;
+      const goNext = () => {
+        // 札を場から除外して次へ
+        removeById(currentId());
+        idx++;
+        inputEl.disabled = false;
+        showQuestion();
+      };
 
-  const goNext = () => {
-    // 札を場から除外して次へ
-    removeById(currentId());
-    idx++;
-    inputEl.disabled = false;
-    showQuestion();
-  };
-
-  if (AUTO_NEXT_MS > 0) {
-    setTimeout(goNext, AUTO_NEXT_MS);
-  } else {
-    // 手動進行にしたい場合は、スキップ（次へ）ボタンで進める
-    // ここではボタンのラベルを一時的に「次へ」にする例
-    skipBtn.textContent = "次へ";
-    const once = () => { skipBtn.removeEventListener("click", once); skipBtn.textContent = "スキップ"; goNext(); };
-    skipBtn.addEventListener("click", once);
-  }
-};
-
-// （参考）showQuestion は既存のままでOK。
-// その中の resultEl をクリアする処理は「次の問題を表示するとき」に走るので、
-// 今回の修正（次へ進む前に少し待つ）と競合しません。
-
-
-
-
-
+      if (AUTO_NEXT_MS > 0) {
+        setTimeout(goNext, AUTO_NEXT_MS);
+      } else {
+        // 手動進行にしたい場合は、スキップ（次へ）ボタンで進める
+        skipBtn.textContent = "次へ";
+        const once = () => { skipBtn.removeEventListener("click", once); skipBtn.textContent = "スキップ"; goNext(); };
+        skipBtn.addEventListener("click", once);
+      }
+    };
 
     const skipQuestion = () => {
       if (idx >= reads.length) return;
