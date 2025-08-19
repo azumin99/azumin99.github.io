@@ -32,30 +32,51 @@
     .kbd{border:1px solid #374151;background:#0b1220;border-radius:6px;padding:2px 6px}
     @media (min-width:720px){ .grid{grid-template-columns:2fr 1fr} }
 
-/* ▼ 画像表示 */
-.imgwrap{
-  margin-top:12px;
-  background:#0b1220;
-  border:1px solid #263042;
-  border-radius:12px;
-  padding:8px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  min-height:220px; /* 画像未読込でも高さを確保 */
-}
-.imgwrap img{
-  max-width:100%;
-  max-height:360px;
-  display:block;
-  border-radius:8px;
-}
+    /* ▼ 画像表示 */
+    .imgwrap{
+      margin-top:12px;
+      background:#0b1220;
+      border:1px solid #263042;
+      border-radius:12px;
+      padding:8px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:220px; /* 画像未読込でも高さを確保 */
+    }
+    .imgwrap img{
+      max-width:100%;
+      max-height:360px;
+      display:block;
+      border-radius:8px;
+    }
+
+    /* ▼ 決まり字一覧：行スタイル＋6分類カラー */
+    .list-row{
+      padding:4px 8px;
+      border-radius:8px;
+      margin:2px 0;
+      border:1px solid transparent;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .list-row .lab{ font-size:11px; opacity:.9; }
+    
+    .unread-stable{  background:#0b1220;           border-color:#334155; color:#cbd5e1; } /* 未読・不変 */
+    .unread-changed{  background:rgba(99,102,241,.18); border-color:#6366f1; color:#e5e7eb; } /* 未読・変化中(藍) */
+    
+    .read-stable-ok{  background:rgba(16,185,129,.18); border-color:#10b981; color:#e5e7eb; }  /* 既読・不変・正解(緑) */
+    .read-changed-ok{ background:rgba(20,184,166,.20); border-color:#14b8a6; color:#e5e7eb; }  /* 既読・変化・正解(青緑) */
+    
+    .read-stable-ng{  background:rgba(239,68,68,.18);  border-color:#ef4444; color:#e5e7eb; }  /* 既読・不変・誤答(赤) */
+    .read-changed-ng{ background:rgba(245,158,11,.20);  border-color:#f59e0b; color:#1f2937; }  /* 既読・変化・誤答(橙) */
 
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="title">競技かるた 決まり字変化 ver2.01</div>
+    <div class="title">競技かるた 決まり字変化 ver2.02</div>
     <div class="grid">
       <div class="card">
 
@@ -150,6 +171,7 @@
     // ====== 状態 ======
     let remaining = [];               // 残り札（Card配列）
     let id2s = new Map();             // id -> s
+    let history = new Map();          // id -> { changedAtRead: boolean, correct: boolean }
     let reads = [];                   // シャッフル済みの 1..100
     let idx = 0;                      // 現在の出題インデックス
     let awaitingNext = false; // 「答える」後に手動で次へ進む待機中かどうか
