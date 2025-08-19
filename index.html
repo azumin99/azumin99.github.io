@@ -76,7 +76,7 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="title">競技かるた 決まり字変化 ver2.04</div>
+    <div class="title">競技かるた 決まり字変化 ver2.05</div>
     <div class="grid">
       <div class="card">
 
@@ -247,15 +247,45 @@
     };
 
     const renderList = () => {
-      // 決まり字一覧
-      const rows = CARDS
-        .slice()
-        //.sort((a,b) => a.id - b.id)
-        .map(c => `<div><span class="mono">#${String(c.id).padStart(3,"0")}</span>：${c.s}</div>`)
-        .join("");
+      const remIds = new Set(remaining.map(c => c.id));
+    
+      const rows = CARDS.slice().map(c => {
+        let cls = "", label = "";
+    
+        if (remIds.has(c.id)) {
+          // 未読：今この瞬間に変化しているか
+          const changedNow = (expectedPrefix(c.s) !== c.s);
+          cls   = changedNow ? "unread-changed" : "unread-stable";
+          label = changedNow ? "未読・変化中" : "未読・不変";
+        } else {
+          // 既読：出題時の状態＋正誤
+          const h = history.get(c.id);
+          if (!h) {
+            // 万一履歴がない場合（想定外）：不明扱い→未読・不変相当
+            cls = "unread-stable";
+            label = "既読・不明";
+          } else {
+            const part1 = h.changedAtRead ? "changed" : "stable";
+            const part2 = h.correct ? "ok" : "ng";
+            cls = `read-${part1}-${part2}`;
+            label = `${h.changedAtRead ? "変化" : "不変"}・${h.correct ? "正解" : "誤答"}`;
+          }
+        }
+    
+        const idStr = String(c.id).padStart(3, "0");
+        return `<div class="list-row ${cls}" title="${label}">
+                  <span><span class="mono">#${idStr}</span>：${c.s}</span>
+                  <span class="lab">${label}</span>
+                </div>`;
+      }).join("");
+    
       listEl.innerHTML = rows;
     };
 
+
+
+    
+    
     const showQuestion = () => {
       advanced = false;
       if (nextTimer) { clearTimeout(nextTimer); nextTimer = null; }
