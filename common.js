@@ -204,7 +204,7 @@ const showQuestion = () => {
       imgEl.style.visibility = "visible";
       imgEl.alt = `画像が見つかりません（${id}.png）`;
     };
-    imgEl.src = `${id}.png`;
+    imgEl.src = `./cards/${id}.png`;
     imgEl.alt = `札画像 ${id}.png`;
   }
   renderList();
