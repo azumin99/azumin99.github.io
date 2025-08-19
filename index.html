@@ -51,7 +51,7 @@
       border-radius:8px;
     }
 
-    /* ▼ 決まり字一覧：行スタイル＋6分類カラー */
+    /* ▼ 決まり字一覧：行スタイル＋6分類カラー（改良版） */
     .list-row{
       padding:4px 8px;
       border-radius:8px;
@@ -61,22 +61,67 @@
       justify-content:space-between;
       align-items:center;
     }
-    .list-row .lab{ font-size:11px; opacity:.9; }
+    .list-row .lab{ font-size:11px; opacity:.95; }
     
-    .unread-stable{  background:#0b1220;           border-color:#334155; color:#cbd5e1; } /* 未読・不変 */
-    .unread-changed{  background:rgba(99,102,241,.18); border-color:#6366f1; color:#e5e7eb; } /* 未読・変化中(藍) */
+    /* 未読 */
+    .unread-stable{   /* 未読・不変 */
+      background:#0b1220;
+      border-color:#334155;
+      color:#cbd5e1;
+    }
+    .unread-changed{  /* 未読・変化中（藍） */
+      background:rgba(79,70,229,.24);   /* indigo-600 */
+      border-color:#6366f1;             /* indigo-500 */
+      color:#e5e7eb;
+    }
     
-    .read-stable-ok{  background:rgba(16,185,129,.18); border-color:#10b981; color:#e5e7eb; }  /* 既読・不変・正解(緑) */
-    .read-changed-ok{ background:rgba(20,184,166,.20); border-color:#14b8a6; color:#e5e7eb; }  /* 既読・変化・正解(青緑) */
+    /* 既読・正解 */
+    .read-stable-ok{  /* 不変・正解（緑） */
+      background:rgba(34,197,94,.32);   /* green-500 */
+      border-color:#22c55e;
+      color:#ffffff;
+    }
+    .read-changed-ok{ /* 変化・正解（青） ←緑と明確に分離 */
+      background:rgba(59,130,246,.30);  /* blue-500 */
+      border-color:#3b82f6;
+      color:#ffffff;
+    }
     
-    .read-stable-ng{  background:rgba(239,68,68,.18);  border-color:#ef4444; color:#e5e7eb; }  /* 既読・不変・誤答(赤) */
-    .read-changed-ng{ background:rgba(245,158,11,.20);  border-color:#f59e0b; color:#1f2937; }  /* 既読・変化・誤答(橙) */
+    /* 既読・誤答 */
+    .read-stable-ng{  /* 不変・誤答（赤） */
+      background:rgba(239,68,68,.30);   /* red-500 */
+      border-color:#ef4444;
+      color:#ffffff;                    /* 文字を白に */
+    }
+    .read-changed-ng{ /* 変化・誤答（橙） */
+      background:rgba(245,158,11,.35);  /* amber-500（濃いめ） */
+      border-color:#f59e0b;
+      color:#ffffff;                    /* 文字を白に（見やすく） */
+    }
+
+    /* ▼ 決まり字一覧：行スタイル＋6分類カラー */
+    .tmp-list-row{
+      padding:4px 8px;
+      border-radius:8px;
+      margin:2px 0;
+      border:1px solid transparent;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .tmp-list-row .lab{ font-size:11px; opacity:.9; }
+    .tmp-unread-stable{  background:#0b1220;           border-color:#334155; color:#cbd5e1; } /* 未読・不変 */
+    .tmp-unread-changed{  background:rgba(99,102,241,.18); border-color:#6366f1; color:#e5e7eb; } /* 未読・変化中(藍) */
+    .tmp-read-stable-ok{  background:rgba(16,185,129,.18); border-color:#10b981; color:#e5e7eb; }  /* 既読・不変・正解(緑) */
+    .tmp-read-changed-ok{ background:rgba(20,184,166,.20); border-color:#14b8a6; color:#e5e7eb; }  /* 既読・変化・正解(青緑) */
+    .tmp-read-stable-ng{  background:rgba(239,68,68,.18);  border-color:#ef4444; color:#e5e7eb; }  /* 既読・不変・誤答(赤) */
+    .tmp-read-changed-ng{ background:rgba(245,158,11,.20);  border-color:#f59e0b; color:#1f2937; }  /* 既読・変化・誤答(橙) */
 
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="title">競技かるた 決まり字変化 ver2.05</div>
+    <div class="title">競技かるた 決まり字変化 ver2.06</div>
     <div class="grid">
       <div class="card">
 
