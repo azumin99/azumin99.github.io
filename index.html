@@ -76,7 +76,7 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="title">競技かるた 決まり字変化 ver2.02</div>
+    <div class="title">競技かるた 決まり字変化 ver2.03</div>
     <div class="grid">
       <div class="card">
 
@@ -307,14 +307,18 @@
     
       const expect = expectedPrefix(s);
       const user = inputEl.value.trim();
-    
-      if (user === expect) {
+      const correct = (user === expect);
+      const changedAtRead = (expect !== s);
+      
+      if (correct) {
         resultEl.innerHTML = `<span class="ok">OK</span>`;
         statusPill.textContent = "判定：正解";
       } else {
         resultEl.innerHTML = `<span class="ng">NG</span>：正解は <b class="mono">${expect}</b>`;
         statusPill.textContent = "判定：不正解";
       }
+      history.set(currentId(), { changedAtRead, correct });
+
     
       // 判定中は入力をロック
       inputEl.disabled = true;
@@ -329,12 +333,14 @@
       }
     };
     
-    
     const skipQuestion = () => {
       if (idx >= reads.length) return;
-      // 「答える」後の '次へ' でも、未回答の 'スキップ' でも、進行は同じ
+      const s = curS();
+      const changedAtRead = (expectedPrefix(s) !== s);
+      history.set(currentId(), { changedAtRead, correct: false }); // スキップ＝誤答扱い
       advanceToNext();
     };
+
 
     const resetAll = () => {
       remaining = CARDS.slice();
