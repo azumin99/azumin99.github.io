@@ -55,7 +55,7 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="title">競技かるた 決まり字変化 ver1.9</div>
+    <div class="title">競技かるた 決まり字変化 ver2.0</div>
     <div class="grid">
       <div class="card">
 
@@ -153,9 +153,18 @@
     let reads = [];                   // シャッフル済みの 1..100
     let idx = 0;                      // 現在の出題インデックス
     let awaitingNext = false; // 「答える」後に手動で次へ進む待機中かどうか
+    let nextTimer = null;     // 自動遷移タイマーID
+    let advanced = false;     // この設問で既に進んだかのガード
 
     // 共通：次へ進む
     const advanceToNext = () => {
+      // 追加：二重進行防止
+      if (advanced) return;
+      advanced = true;
+
+      // 追加：手動進行時は保留中タイマーを無効化
+      if (nextTimer) clearTimeout(nextTimer); nextTimer = null;
+          
       if (idx >= reads.length) return;
       removeById(currentId());
       idx++;
@@ -226,6 +235,10 @@
     };
 
     const showQuestion = () => {
+      advanced = false;
+      if (nextTimer) clearTimeout(nextTimer); nextTimer = null;
+      skipBtn.textContent = "スキップ";
+      
       if (idx >= reads.length) {
         qidEl.textContent = "終了";
         statusPill.textContent = "完了";
@@ -286,7 +299,7 @@
     
       if (AUTO_NEXT_MS > 0) {
         // 自動で次へ
-        setTimeout(advanceToNext, AUTO_NEXT_MS);
+        nextTimer = setTimeout(advanceToNext, AUTO_NEXT_MS);
       } else {
         // 手動で次へ（ボタン表示だけ変えて待機）
         awaitingNext = true;
@@ -306,6 +319,9 @@
       id2s = new Map(CARDS.map(c => [c.id, c.s]));
       reads = shuffle(Array.from({length:100}, (_,i)=>i+1));
       idx = 0;
+
+      if (nextTimer) clearTimeout(nextTimer); nextTimer = null;
+      advanced = false;
       awaitingNext = false;
       inputEl.disabled = false;
       statusPill.textContent = "準備完了";
