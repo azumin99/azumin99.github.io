@@ -130,7 +130,7 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="title">競技かるた 決まり字変化 ver2.10</div>
+    <div class="title">競技かるた 決まり字変化 ver2.11</div>
     <div class="grid">
       <div class="card">
 
@@ -351,6 +351,7 @@
         resultEl.innerHTML = `<span class="ok">お疲れさまでした！</span> 全問終了です。`;
         inputEl.disabled = true;
         if (imgEl) { imgEl.removeAttribute("src"); imgEl.alt = ""; imgEl.style.visibility = "hidden"; }
+        updateProgress();
         renderList();
         return;
       }
