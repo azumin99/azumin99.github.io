@@ -130,7 +130,7 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="title">競技かるた 決まり字変化 トレーニングver2.14</div>
+    <div class="title">競技かるた 決まり字変化 トレーニングver2.15</div>
     <div class="grid">
       <div class="card">
 
@@ -182,9 +182,12 @@
         <div class="small" style="display:none;">※※※※※※※※※※※※※※※※※</div>
         <details style="margin-top:10px;">
           <summary>決まり字一覧を表示</summary>
+          <button type="button" class="secondary" id="toggleOrderBtn" style="padding:6px 10px;font-size:12px;">並び替え</button>
+            <!--
             <div class="row" style="margin-top:8px; justify-content:flex-end; gap:8px;">
-              <button type="button" class="secondary" id="toggleOrderBtn" style="padding:6px 10px;font-size:12px;">読み上げ順</button>
-            </div>   
+              <button type="button" class="secondary" id="toggleOrderBtn" style="padding:6px 10px;font-size:12px;">並び替え</button>
+            </div>
+            -->
           <div id="list" class="small" style="margin-top:8px;max-height:460px;overflow:auto;"></div>
         </details>
       </div>
@@ -272,11 +275,11 @@
     const updateToggleLabel = () => {
       if (!toggleOrderBtn) return;
       if (listMode === "initial") {
-        toggleOrderBtn.textContent = "読み上げ順";
-        toggleOrderBtn.title = "読み上げ順に切替";
+        //toggleOrderBtn.textContent = "並び替え";
+        toggleOrderBtn.title = "読み上げ順に並び替え";
       } else {
-        toggleOrderBtn.textContent = "決まり字順";
-        toggleOrderBtn.title = "決まり字順に切替";
+        //toggleOrderBtn.textContent = "並び替え";
+        toggleOrderBtn.title = "決まり字順に並び替え";
       }
     };
 
