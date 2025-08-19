@@ -35,7 +35,15 @@
     /* ▼ 画像表示 */
     .imgwrap{
       margin-top:12px;
-      background:#0b1220;
+      background-color:#0b1220;
+      
+      /* ▼ 背景画像を設定（背景＋カード画像の二層構造になる） */
+      background-image:url('background.png');   /* 同階層にある背景画像 */
+      background-position:center;
+      background-size:cover;                  /* 画像全体を見せたいなら contain / 埋め尽くすなら cover */
+      background-repeat:no-repeat;
+      background-clip:padding-box;              /* 枠線の下に背景が回り込まないように */
+    
       border:1px solid #263042;
       border-radius:12px;
       padding:8px;
@@ -44,6 +52,7 @@
       justify-content:center;
       min-height:220px; /* 画像未読込でも高さを確保 */
     }
+
     .imgwrap img{
       max-width:100%;
       max-height:360px;
@@ -121,7 +130,7 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="title">競技かるた 決まり字変化 ver2.06</div>
+    <div class="title">競技かるた 決まり字変化 ver2.07</div>
     <div class="grid">
       <div class="card">
 
