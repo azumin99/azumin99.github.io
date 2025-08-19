@@ -8,25 +8,30 @@
     :root { --bg:#0f172a; --card:#111827; --ink:#e5e7eb; --sub:#9ca3af; --ok:#10b981; --ng:#ef4444; --accent:#6366f1; }
     *{box-sizing:border-box} 
     /*
+    body{background-image:url('background.png');background-position:center;background-size:cover;background-repeat:no-repeat;background-clip:padding-box;margin:0;background:linear-gradient(180deg,#0b1220,#0f172a 30%,#0b1220);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    */
     body{
       margin:0;
-      background-image:url('background.png');
-      background-position:center;
-      background-size:cover;
-      background-repeat:no-repeat;
-      background-color:#0b1220;
+      background:
+        radial-gradient(1200px 700px at 50% 220px, rgba(255,255,255,.07), rgba(0,0,0,0) 60%),
+        linear-gradient(180deg,#0b1220,#0f172a 30%,#0b1220);
       color:var(--ink);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
       min-height:100vh;
       display:flex; align-items:center; justify-content:center;
       padding:24px;
     }
-    */
-    body{background-image:url('background.png');background-position:center;background-size:cover;background-repeat:no-repeat;background-clip:padding-box;margin:0;background:linear-gradient(180deg,#0b1220,#0f172a 30%,#0b1220);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
     .wrap{width:min(920px,100%);display:grid;gap:16px}
     .title{font-size:24px;font-weight:700;letter-spacing:.02em}
     .grid{display:grid;grid-template-columns:1fr;gap:16px}
+    /*
     .card{background:var(--card);border:1px solid #1f2937;border-radius:16px;padding:20px;box-shadow:0 10px 25px rgba(0,0,0,.25)}
+    */
+    .card{
+      background:rgba(13,20,35,.92);
+      border:1px solid #1e2a3e;
+      box-shadow:0 10px 28px rgba(0,0,0,.40), inset 0 1px 0 rgba(255,255,255,.03);
+    }
     .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
     .pill{padding:6px 10px;border-radius:999px;background:#0b1220;border:1px solid #253047;color:var(--sub);font-size:12px}
     .id{font-size:40px;font-weight:800;letter-spacing:.06em}
@@ -48,19 +53,16 @@
     .kbd{border:1px solid #374151;background:#0b1220;border-radius:6px;padding:2px 6px}
     @media (min-width:720px){ .grid{grid-template-columns:2fr 1fr} }
 
-    /* ▼ 画像表示 */
+
+    /* 置き換え */
     .imgwrap{
+      position:relative;                   /* ← 疑似要素を重ねるため */
       margin-top:12px;
       background-color:#0b1220;
-      
-      /* ▼ 背景画像を設定（背景＋カード画像の二層構造になる） */
-      
-      background-image:url('background.png');
+      background-image:url('background.png'); /* カードの裏側だけに適用 */
       background-position:center;
       background-size:cover;
       background-repeat:no-repeat;
-      background-clip:padding-box;
-      
     
       border:1px solid #263042;
       border-radius:12px;
@@ -68,7 +70,41 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      min-height:380px; /* 画像未読込でも高さを確保 */
+      min-height:380px;
+      overflow:hidden;                      /* 枠外の画像をカット */
+    }
+    
+    /* 画像の上に“ほんのり”ビネットと明るさを被せて読みやすく */
+    .imgwrap::before{
+      content:"";
+      position:absolute; inset:0;
+      pointer-events:none;
+      background:
+        radial-gradient(120% 85% at 50% 40%, rgba(255,255,255,.18), rgba(255,255,255,0) 60%),
+        linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.18));
+    }
+    .imgwrap img{ position:relative; z-index:1; border-radius:8px; }
+
+
+    
+    /*
+    .imgwrap{
+      margin-top:12px;
+      background-color:#0b1220;
+      
+      background-image:url('background.png');
+      background-position:center;
+      background-size:cover;
+      background-repeat:no-repeat;
+      background-clip:padding-box;
+          
+      border:1px solid #263042;
+      border-radius:12px;
+      padding:8px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:380px; 
     }
 
     .imgwrap img{
@@ -77,6 +113,7 @@
       display:block;
       border-radius:8px;
     }
+    */
 
     /* ▼ 決まり字一覧：行スタイル＋6分類カラー（改良版） */
     .list-row{
@@ -126,8 +163,8 @@
       color:#ffffff;                    /* 文字を白に（見やすく） */
     }
 
-    /* ▼ 決まり字一覧：行スタイル＋6分類カラー */
-    .tmp-list-row{
+    /*
+    .list-row{
       padding:4px 8px;
       border-radius:8px;
       margin:2px 0;
@@ -136,19 +173,19 @@
       justify-content:space-between;
       align-items:center;
     }
-    .tmp-list-row .lab{ font-size:11px; opacity:.9; }
-    .tmp-unread-stable{  background:#0b1220;           border-color:#334155; color:#cbd5e1; } /* 未読・不変 */
-    .tmp-unread-changed{  background:rgba(99,102,241,.18); border-color:#6366f1; color:#e5e7eb; } /* 未読・変化中(藍) */
-    .tmp-read-stable-ok{  background:rgba(16,185,129,.18); border-color:#10b981; color:#e5e7eb; }  /* 既読・不変・正解(緑) */
-    .tmp-read-changed-ok{ background:rgba(20,184,166,.20); border-color:#14b8a6; color:#e5e7eb; }  /* 既読・変化・正解(青緑) */
-    .tmp-read-stable-ng{  background:rgba(239,68,68,.18);  border-color:#ef4444; color:#e5e7eb; }  /* 既読・不変・誤答(赤) */
-    .tmp-read-changed-ng{ background:rgba(245,158,11,.20);  border-color:#f59e0b; color:#1f2937; }  /* 既読・変化・誤答(橙) */
-
+    .list-row .lab{ font-size:11px; opacity:.9; }
+    .unread-stable{  background:#0b1220;           border-color:#334155; color:#cbd5e1; }
+    .unread-changed{  background:rgba(99,102,241,.18); border-color:#6366f1; color:#e5e7eb; }
+    .read-stable-ok{  background:rgba(16,185,129,.18); border-color:#10b981; color:#e5e7eb; }
+    .read-changed-ok{ background:rgba(20,184,166,.20); border-color:#14b8a6; color:#e5e7eb; }
+    .read-stable-ng{  background:rgba(239,68,68,.18);  border-color:#ef4444; color:#e5e7eb; }
+    .read-changed-ng{ background:rgba(245,158,11,.20);  border-color:#f59e0b; color:#1f2937; }
+    */
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="title">競技かるた 決まり字変化 トレーニングver2.20</div>
+    <div class="title">競技かるた 決まり字変化 トレーニングver2.21</div>
     <div class="grid">
       <div class="card">
 
