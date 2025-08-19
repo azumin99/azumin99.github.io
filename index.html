@@ -55,7 +55,7 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="title">競技かるた 決まり字変化 ver1.1</div>
+    <div class="title">競技かるた 決まり字変化 ver1.2</div>
     <div class="grid">
       <div class="card">
         <div class="row" style="justify-content:space-between;">
@@ -206,7 +206,7 @@
       // デバッグ用一覧
       const rows = CARDS
         .slice()
-        .sort((a,b) => a.id - b.id)
+        //.sort((a,b) => a.id - b.id)
         .map(c => `<div><span class="mono">#${String(c.id).padStart(3,"0")}</span>：${c.s}</div>`)
         .join("");
       listEl.innerHTML = rows;
