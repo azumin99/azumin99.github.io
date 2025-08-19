@@ -130,7 +130,7 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="title">競技かるた 決まり字変化 ver2.11</div>
+    <div class="title">競技かるた 決まり字変化 ver2.12</div>
     <div class="grid">
       <div class="card">
 
@@ -182,6 +182,9 @@
         <div class="small" style="display:none;">※※※※※※※※※※※※※※※※※</div>
         <details style="margin-top:10px;">
           <summary>決まり字一覧を表示</summary>
+            <div class="row" style="margin-top:8px; justify-content:flex-end; gap:8px;">
+              <button type="button" class="secondary" id="toggleOrderBtn" style="padding:6px 10px;font-size:12px;">読み上げ順</button>
+            </div>   
           <div id="list" class="small" style="margin-top:8px;max-height:460px;overflow:auto;"></div>
         </details>
       </div>
@@ -231,6 +234,7 @@
     let awaitingNext = false; // 「答える」後に手動で次へ進む待機中かどうか
     let nextTimer = null;     // 自動遷移タイマーID
     let advanced = false;     // この設問で既に進んだかのガード
+    let listMode = "initial";
 
     // 共通：次へ進む
     const advanceToNext = () => {
@@ -263,6 +267,18 @@
     const skipBtn = document.getElementById("skipBtn");
     const listEl = document.getElementById("list");
     const imgEl = document.getElementById("cardImg");
+    const toggleOrderBtn = document.getElementById("toggleOrderBtn");
+
+    const updateToggleLabel = () => {
+      if (!toggleOrderBtn) return;
+      if (listMode === "initial") {
+        toggleOrderBtn.textContent = "読み上げ順";
+        toggleOrderBtn.title = "読み上げ順に切替";
+      } else {
+        toggleOrderBtn.textContent = "決まり字順";
+        toggleOrderBtn.title = "決まり字順に切替";
+      }
+    };
 
 
     // ====== ヘルパ ======
