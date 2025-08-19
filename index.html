@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <title>競技かるた 決まり字変化</title>
+  <title>競技かるた 決まり字変化流し</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root { --bg:#0f172a; --card:#111827; --ink:#e5e7eb; --sub:#9ca3af; --ok:#10b981; --ng:#ef4444; --accent:#6366f1; }
@@ -55,7 +55,7 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="title">競技かるた 決まり字変化 ver1.7</div>
+    <div class="title">競技かるた 決まり字変化 ver1.8</div>
     <div class="grid">
       <div class="card">
 
@@ -152,6 +152,18 @@
     let id2s = new Map();             // id -> s
     let reads = [];                   // シャッフル済みの 1..100
     let idx = 0;                      // 現在の出題インデックス
+    let awaitingNext = false; // 「答える」後に手動で次へ進む待機中かどうか
+
+    // 共通：次へ進む
+    const advanceToNext = () => {
+      if (idx >= reads.length) return;
+      removeById(currentId());
+      idx++;
+      inputEl.disabled = false;     // 次の問題で入力可能に戻す
+      awaitingNext = false;
+      skipBtn.textContent = "スキップ";
+      showQuestion();
+    };
 
     // ====== DOM ======
     const qidEl = document.getElementById("qid");
@@ -213,119 +225,101 @@
       listEl.innerHTML = rows;
     };
 
-const showQuestion = () => {
-  if (idx >= reads.length) {
-    qidEl.textContent = "終了";
-    statusPill.textContent = "完了";
-    resultEl.innerHTML = `<span class="ok">お疲れさまでした！</span> 全問終了です。`;
-    inputEl.disabled = true;
-    if (imgEl) { imgEl.removeAttribute("src"); imgEl.alt = ""; imgEl.style.visibility = "hidden"; }
-    return;
-  }
-
-  const id = String(currentId());
-  qidEl.textContent = id;
-  statusPill.textContent = "出題中";
-  resultEl.textContent = "";
-  inputEl.value = "";
-  inputEl.focus();
-  updateProgress();
-
-  // ▼ 画像切り替え（同階層の id.png を表示）
-  if (imgEl) {
-    imgEl.style.visibility = "hidden";
-    imgEl.onload = () => { imgEl.style.visibility = "visible"; };
-    imgEl.onerror = () => {
-      imgEl.style.visibility = "visible";
-      imgEl.alt = `画像が見つかりません（${id}.png）`;
+    const showQuestion = () => {
+      if (idx >= reads.length) {
+        qidEl.textContent = "終了";
+        statusPill.textContent = "完了";
+        resultEl.innerHTML = `<span class="ok">お疲れさまでした！</span> 全問終了です。`;
+        inputEl.disabled = true;
+        if (imgEl) { imgEl.removeAttribute("src"); imgEl.alt = ""; imgEl.style.visibility = "hidden"; }
+        return;
+      }
+    
+      const id = String(currentId());
+      qidEl.textContent = id;
+      statusPill.textContent = "出題中";
+      resultEl.textContent = "";
+      inputEl.value = "";
+      inputEl.focus();
+      updateProgress();
+    
+      // ▼ 画像切り替え（同階層の id.png を表示）
+      if (imgEl) {
+        imgEl.style.visibility = "hidden";
+        imgEl.onload = () => { imgEl.style.visibility = "visible"; };
+        imgEl.onerror = () => {
+          imgEl.style.visibility = "visible";
+          imgEl.alt = `画像が見つかりません（${id}.png）`;
+        };
+        imgEl.src = `${id}.png`;
+        imgEl.alt = `札画像 ${id}.png`;
+      }
     };
-    imgEl.src = `${id}.png`;
-    imgEl.alt = `札画像 ${id}.png`;
-  }
-};
 
-
-
-// ====== 追加：自動で次へ進むまでの待ち時間（ミリ秒）。0にすると自動で進まない ======
-const AUTO_NEXT_MS = 3500;
-
-// 置き換え：submitAnswer（判定を表示→少し待ってから次へ）
-const submitAnswer = () => {
-  if (idx >= reads.length) return;
-
-  const s = curS();
-  if (!s) {
-    resultEl.innerHTML = `<span class="ng">データ不整合</span>：このIDの札が見つかりません`;
-    return;
-  }
-
-  const expect = expectedPrefix(s);
-  const user = inputEl.value.trim();
-
-  if (user === expect) {
-    resultEl.innerHTML = `<span class="ok">OK</span>`;
-    statusPill.textContent = "判定：正解";
-  } else {
-    resultEl.innerHTML = `<span class="ng">NG</span>：正解は <b class="mono">${expect}</b>`;
-    statusPill.textContent = "判定：不正解";
-  }
-
-  // 判定中は入力をロック
-  inputEl.disabled = true;
-
-  const goNext = () => {
-    // 札を場から除外して次へ
-    removeById(currentId());
-    idx++;
-    inputEl.disabled = false;
-    showQuestion();
-  };
-
-  if (AUTO_NEXT_MS > 0) {
-    setTimeout(goNext, AUTO_NEXT_MS);
-  } else {
-    // 手動進行にしたい場合は、スキップ（次へ）ボタンで進める
-    // ここではボタンのラベルを一時的に「次へ」にする例
-    skipBtn.textContent = "次へ";
-    const once = () => { skipBtn.removeEventListener("click", once); skipBtn.textContent = "スキップ"; goNext(); };
-    skipBtn.addEventListener("click", once);
-  }
-};
-
-// （参考）showQuestion は既存のままでOK。
-// その中の resultEl をクリアする処理は「次の問題を表示するとき」に走るので、
-// 今回の修正（次へ進む前に少し待つ）と競合しません。
-
-
-
-
-
-
+    // ====== 追加：自動で次へ進むまでの待ち時間（ミリ秒）。0にすると自動で進まない ======
+    const AUTO_NEXT_MS = 3500;
+    
+    // submitAnswer（判定を表示→少し待ってから次へ）
+    const submitAnswer = () => {
+      if (idx >= reads.length) return;
+      if (inputEl.disabled) return; // 既に判定済みで待機中なら無視
+    
+      const s = curS();
+      if (!s) {
+        resultEl.innerHTML = `<span class="ng">データ不整合</span>：このIDの札が見つかりません`;
+        return;
+      }
+    
+      const expect = expectedPrefix(s);
+      const user = inputEl.value.trim();
+    
+      if (user === expect) {
+        resultEl.innerHTML = `<span class="ok">OK</span>`;
+        statusPill.textContent = "判定：正解";
+      } else {
+        resultEl.innerHTML = `<span class="ng">NG</span>：正解は <b class="mono">${expect}</b>`;
+        statusPill.textContent = "判定：不正解";
+      }
+    
+      // 判定中は入力をロック
+      inputEl.disabled = true;
+    
+      if (AUTO_NEXT_MS > 0) {
+        // 自動で次へ
+        setTimeout(advanceToNext, AUTO_NEXT_MS);
+      } else {
+        // 手動で次へ（ボタン表示だけ変えて待機）
+        awaitingNext = true;
+        skipBtn.textContent = "次へ";
+      }
+    };
+    
+    
     const skipQuestion = () => {
       if (idx >= reads.length) return;
-      // スキップしても札は場から除外
-      removeById(currentId());
-      idx++;
-      showQuestion();
+      // 「答える」後の '次へ' でも、未回答の 'スキップ' でも、進行は同じ
+      advanceToNext();
     };
 
     const resetAll = () => {
-      // 状態初期化
       remaining = CARDS.slice();
       id2s = new Map(CARDS.map(c => [c.id, c.s]));
       reads = shuffle(Array.from({length:100}, (_,i)=>i+1));
       idx = 0;
+      awaitingNext = false;
       inputEl.disabled = false;
       statusPill.textContent = "準備完了";
+      skipBtn.textContent = "スキップ";
       updateProgress();
       showQuestion();
     };
 
+    
     // ====== イベント ======
     formEl.addEventListener("submit", (e) => { e.preventDefault(); submitAnswer(); });
     resetBtn.addEventListener("click", resetAll);
     skipBtn.addEventListener("click", skipQuestion);
-
+    
     // ====== 起動 ======
     renderList();
     resetAll();
