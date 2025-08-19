@@ -130,7 +130,7 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="title">競技かるた 決まり字変化 ver2.12</div>
+    <div class="title">競技かるた 決まり字変化 トレーニングver2.13</div>
     <div class="grid">
       <div class="card">
 
@@ -468,8 +468,15 @@
     formEl.addEventListener("submit", (e) => { e.preventDefault(); submitAnswer(); });
     resetBtn.addEventListener("click", resetAll);
     skipBtn.addEventListener("click", skipQuestion);
+    toggleOrderBtn.addEventListener("click", () => {
+      listMode = (listMode === "initial") ? "read" : "initial";
+      updateToggleLabel();
+      renderList();
+    });
+
     
     // ====== 起動 ======
+    updateToggleLabel();
     renderList();
     resetAll();
   </script>
