@@ -130,7 +130,7 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="title">競技かるた 決まり字変化 トレーニングver2.13</div>
+    <div class="title">競技かるた 決まり字変化 トレーニングver2.14</div>
     <div class="grid">
       <div class="card">
 
@@ -316,10 +316,23 @@
       remainEl.textContent = remaining.length.toString();
     };
 
+
     const renderList = () => {
       const remIds = new Set(remaining.map(c => c.id));
     
-      const rows = CARDS.slice().map(c => {
+      // 並び順のソースを分岐
+      let items;
+      if (listMode === "initial") {
+        // 初期状態：全100枚（既存順）
+        items = CARDS.slice();
+      } else {
+        // 読み上げ順：既読だけ（reads の先頭 idx 件）
+        // ※ reads は提示順、idx は既に読み上げ済みの枚数
+        const readIds = reads.slice(0, idx);
+        items = readIds.map(id => CARDS.find(c => c.id === id)).filter(Boolean);
+      }
+    
+      const rows = items.map(c => {
         let cls = "", label = "";
     
         if (remIds.has(c.id)) {
@@ -331,7 +344,6 @@
           // 既読：出題時の状態＋正誤
           const h = history.get(c.id);
           if (!h) {
-            // 万一履歴がない場合（想定外）：不明扱い→未読・不変相当
             cls = "unread-stable";
             label = "既読・不明";
           } else {
@@ -353,8 +365,6 @@
     };
 
 
-
-    
     
     const showQuestion = () => {
       advanced = false;
