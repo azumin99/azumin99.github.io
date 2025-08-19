@@ -76,7 +76,7 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="title">競技かるた 決まり字変化 ver2.03</div>
+    <div class="title">競技かるた 決まり字変化 ver2.04</div>
     <div class="grid">
       <div class="card">
 
@@ -185,9 +185,9 @@
       advanced = true;
 
       // 追加：手動進行時は保留中タイマーを無効化
-      if (nextTimer) clearTimeout(nextTimer); nextTimer = null;
-          
+      if (nextTimer) { clearTimeout(nextTimer); nextTimer = null; }    
       if (idx >= reads.length) return;
+      
       removeById(currentId());
       idx++;
       inputEl.disabled = false;     // 次の問題で入力可能に戻す
@@ -258,7 +258,7 @@
 
     const showQuestion = () => {
       advanced = false;
-      if (nextTimer) clearTimeout(nextTimer); nextTimer = null;
+      if (nextTimer) { clearTimeout(nextTimer); nextTimer = null; }
       skipBtn.textContent = "スキップ";
       
       if (idx >= reads.length) {
@@ -267,6 +267,7 @@
         resultEl.innerHTML = `<span class="ok">お疲れさまでした！</span> 全問終了です。`;
         inputEl.disabled = true;
         if (imgEl) { imgEl.removeAttribute("src"); imgEl.alt = ""; imgEl.style.visibility = "hidden"; }
+        renderList();
         return;
       }
     
@@ -289,6 +290,7 @@
         imgEl.src = `${id}.png`;
         imgEl.alt = `札画像 ${id}.png`;
       }
+      renderList();
     };
 
     // ====== 追加：自動で次へ進むまでの待ち時間（ミリ秒）。0にすると自動で進まない ======
@@ -348,9 +350,11 @@
       reads = shuffle(Array.from({length:100}, (_,i)=>i+1));
       idx = 0;
 
-      if (nextTimer) clearTimeout(nextTimer); nextTimer = null;
+      if (nextTimer) { clearTimeout(nextTimer); nextTimer = null; }
       advanced = false;
       awaitingNext = false;
+      history.clear();
+      
       inputEl.disabled = false;
       statusPill.textContent = "準備完了";
       skipBtn.textContent = "スキップ";
