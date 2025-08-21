@@ -2,74 +2,472 @@
 <html lang="ja">
 <head>
     <meta charset="utf-8" />
-    <title>競技かるた 決まり字変化流し</title>
+    <title>札配置 暗記トレーニング</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="./contents.css">
+    <style>
+        :root {
+            /* blank.png の実寸を読み取って上書きします */
+            --w: 1px; /* 仮の幅 */
+            --h: 1px; /* 仮の高さ */
+            --gap: 1px;
+            --bg: #0f172a;
+            --card: #111827;
+            --ink: #e5e7eb;
+        }
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            background: radial-gradient(1200px 700px at 50% 220px, rgba(255,255,255,.07), rgba(0,0,0,0) 60%), linear-gradient(180deg,#0b1220,#0f172a 30%,#0b1220);
+            color: var(--ink);
+            font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: fixed; /* 画面全体に固定 */
+            inset: 0;
+            z-index: -1; /* すべての要素の裏側に置く */
+            pointer-events: none; /* クリック透過 */
+
+            background: url('background.png') center/cover no-repeat;
+            opacity: 0.36; /* ←見え方の強さ。0.12〜0.25で好みに調整 */
+            filter: saturate(110%) brightness(105%);
+        }
+
+        header {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        button {
+            cursor: pointer;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 10px;
+            background: #4f46e5;
+            color: white;
+            font-weight: 600;
+        }
+
+        .wrap {
+            margin: auto; /* 画面中央寄せ */
+            background: var(--card);
+            padding: 30px;
+            background-color: var(--bg); /* フォールバック色 */
+            background-image: url('tatami.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            /*  
+            border-radius: 16px;  
+            box-shadow: 0 10px 30px rgba(0,0,0,.25);  
+            */
+        }
+
+        .field {
+            display: inline-block; /* 中身のグリッドにフィット */
+            padding: 8px; /* 外周の余白（枠の内側） */
+            background-color: var(--bg); /* フォールバック色 */
+            background-image: url('tatami.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            /* 好みで飾り枠 */
+            border: 6px solid #243c1d; /* 黒/緑枠など任意 */
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.25);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(11, var(--w));
+            grid-auto-rows: var(--h);
+            gap: var(--gap);
+            justify-content: center;
+            background: transparent;
+        }
+
+        .cell {
+            width: var(--w);
+            height: var(--h);
+            background: transparent;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cell img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .cell.flip img {
+            transform: rotate(180deg);
+        }
+        /*
+        .page {
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 24px;
+            align-items: center; 
+        }
+
+
+        .board {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .side {
+            width: 260px;
+            max-width: 30vw;
+            background: var(--card);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 12px 36px rgba(0,0,0,.35);
+            position: sticky;
+            top: 16px;
+            align-self: start; 
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        */
+
+        /*
+        .page {
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 260px minmax(340px, 480px);
+            gap: 24px;
+            align-items: start;
+        }
+        */
+        /* 右列の上=リスト、下=ボタン にする */
+        .page {
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr minmax(340px,480px); /* 左=盤面 / 右=リスト＋ボタン */
+            grid-template-rows: auto auto;
+            grid-template-areas:
+                "board lists"
+                "board controls";
+            gap: 24px;
+            align-items: start;
+        }
+
+        /* 既存 .side はそのまま使います（操作用） */
+        .side {
+            width: 260px;
+            max-width: 30vw;
+            background: var(--card);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 12px 36px rgba(0,0,0,.35);
+            position: sticky;
+            top: 16px;
+            align-self: start;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /*
+        .side.lists {
+            background: transparent;
+            box-shadow: none;
+            padding: 0;
+            gap: 0;
+        }
+        */
+        .board {
+            grid-area: board;
+        }
+
+        .side.lists {
+            grid-area: lists;
+            width: 80%;
+            height: 100%;
+        }
+
+        .side.controls {
+            grid-area: controls;
+            width: 80%;
+        }
+        /* 幅260pxを解除して右列幅に合わせる */
+
+
+        /* リスト2つを横並び、少しだけ間隔 */
+        .lists-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            /*
+            position: sticky;
+            */
+            top: 16px;
+            align-self: start;
+        }
+
+        /* 各リストの箱：ここだけにスクロールを持たせる（1箱=1スクロール） */
+        .listBox {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 12px;
+            box-shadow: 0 12px 36px rgba(0,0,0,.35);
+            max-height: 460px; /* お好みで 60-70vh などにしてもOK */
+            overflow: auto; /* スクロールは外側だけ */
+        }
+
+        /* タイトル部分の見た目微調整（任意） */
+        .listBox summary {
+            font-weight: 700;
+            cursor: default;
+            list-style: none;
+            margin-bottom: 6px;
+        }
+
+        .listBox summary::-webkit-details-marker {
+            display: none;
+        }
+    </style>
 </head>
 <body>
-    <div class="wrap">
-        <div class="title">競技かるた 決まり字変化 トレーニングver1.00</div>
-        <div class="grid">
-            <div class="card">
 
-                <div class="row" style="display:none;">
-                    <div>
-                        <div class="muted small">現在の出題（札番号）</div>
-                        <div class="id mono" id="qid">-</div>
-                    </div>
-                    <div>
-                        <div class="pill" id="statusPill">未開始</div>
-                    </div>
-                </div>
-
-                <div class="row" style="margin-top:10px;">
-                    <div class="muted small">進捗</div>
-                    <div class="muted small"><span id="progressText">0 / 100</span></div>
-                </div>
-                <div class="progress" aria-hidden="true"><div id="bar" class="bar"></div></div>
-                <div class="imgwrap"><img id="cardImg" alt="札画像" /></div>
-                <form id="answerForm" style="margin-top:16px;">
-                    <div class="inputrow">
-                        <input id="answerInput" type="text" placeholder="現時点の決まり字を入力（Enter可）" autocomplete="off" />
-                        <button type="submit">答える</button>
-                        <button type="button" class="secondary" id="skipBtn" title="答えずに次の出題へ">スキップ</button>
-                    </div>
-                </form>
-
-                <div class="result" id="result" style="margin-top:10px;"></div>
-                <div class="small" style="display:none; margin-top:8px;">※※※※※※</div>
-
-                <div class="footer" style="margin-top:16px;">
-                    <div class="small">残り札：<span id="remain">100</span> 枚</div>
-                    <div class="row">
-                        <button type="button" class="secondary" id="resetBtn">リセット</button>
-                    </div>
-                </div>
-
-            </div>  <!-- 13行目 -->
-
-            <div class="card">
-                <div class="muted small" style="display:none; margin-bottom:8px;">説明</div>
-                <div class="small" style="display:none;">※※※※※※※※※※※※※※※※※</div>
-                <details style="margin-top:10px;">
-                    <summary style="display:inline-block;">決まり字一覧を表示</summary>
-                    <button type="button" class="secondary" id="toggleOrderBtn" style="padding:6px 10px;font-size:10px;">並び替え</button>
-                    <!--
-                    <div class="row" style="margin-top:8px; justify-content:flex-end; gap:8px;">
-                      <button type="button" class="secondary" id="toggleOrderBtn" style="padding:6px 10px;font-size:12px;">並び替え</button>
-                    </div>
-                    -->
-                    <div id="list" class="small" style="margin-top:8px;max-height:460px;overflow:auto;"></div>
-                </details>
+    <div class="page">
+        <!-- 追加：左右2カラムの入れ物 -->
+        <section class="board">
+            <!-- 左：カード面 -->
+            <div class="wrap">
+                <div id="grid" class="grid" aria-live="polite"></div>
             </div>
+        </section>
 
-        </div>  <!-- 12行目 -->
-    </div>  <!-- 10行目 -->
-    <script src="./common.js" defer></script>
+
+        <aside class="side lists">
+            <div class="lists-grid">
+
+                <!-- 左：グループ -->
+                <section class="listBox">
+                    <details open>
+                        <summary>決まり字（グループ）</summary>
+                        <div id="listGroup">
+                            <!--
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#108</span>：う</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#109</span>：つ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#110</span>：し</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#111</span>：も</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#112</span>：ゆ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#113</span>：い</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#128</span>：いま</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#114</span>：ち</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#129</span>：ちぎ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#115</span>：ひ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#129</span>：ひと</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#116</span>：き</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#130</span>：きみ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#117</span>：は</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#131</span>：はな</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#132</span>：はる</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#118</span>：や</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#133</span>：やま</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#119</span>：よ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#134</span>：よの</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#120</span>：か</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#135</span>：かぜ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#121</span>：み</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#136</span>：みか</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#122</span>：た</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#123</span>：こ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#137</span>：ここ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#124</span>：お</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#138</span>：おお</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#125</span>：わ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#139</span>：わが</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#140</span>：わす</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#141</span>：わた</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#126</span>：な</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#142</span>：なが</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#143</span>：なげ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#144</span>：なに</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#145</span>：なにわ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#127</span>：あ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#146</span>：あき</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#147</span>：あさ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#148</span>：あさぼ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#149</span>：あま</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#150</span>：あら</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#151</span>：あり</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#152</span>：あわ</span> <span class="lab"></span> </div>
+                            -->
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#108</span>：う</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#109</span>：つ</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#110</span>：し</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#111</span>：も</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#112</span>：ゆ</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#113</span>：い</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#128</span>：いま</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#114</span>：ち</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#129</span>：ちぎ</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#115</span>：ひ</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#129</span>：ひと</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#116</span>：き</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#130</span>：きみ</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#117</span>：は</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#131</span>：はな</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#132</span>：はる</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#118</span>：や</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#133</span>：やま</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#119</span>：よ</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#134</span>：よの</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#120</span>：か</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#135</span>：かぜ</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#121</span>：み</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#136</span>：みか</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#122</span>：た</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#123</span>：こ</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#137</span>：ここ</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#124</span>：お</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#138</span>：おお</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#125</span>：わ</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#139</span>：わが</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#140</span>：わす</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#141</span>：わた</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#126</span>：な</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#142</span>：なが</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#143</span>：なげ</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#144</span>：なに</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#145</span>：なにわ</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#127</span>：あ</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#146</span>：あき</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#147</span>：あさ</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#148</span>：あさぼ</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#149</span>：あま</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#150</span>：あら</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#151</span>：あり</span> <span class="lab"></span> </div>
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#152</span>：あわ</span> <span class="lab"></span> </div>
+                        </div>
+                    </details>
+                </section>
+
+                <!-- 右：個別 -->
+                <section class="listBox">
+                    <details open>
+                        <summary>決まり字（個別）</summary>
+                        <div id="listIndividual">
+                            <div class="list-row unread-stable" title=""> <span><span class="mono">#087</span>：む</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#018</span>：す</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#057</span>：め</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#022</span>：ふ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#070</span>：さ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#081</span>：ほ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#077</span>：せ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#074</span>：うか</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#065</span>：うら</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#023</span>：つき</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#013</span>：つく</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#040</span>：しの</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#037</span>：しら</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#100</span>：もも</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#066</span>：もろ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#071</span>：ゆう</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#046</span>：ゆら</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#061</span>：いに</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#021</span>：いまこ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#063</span>：いまは</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#075</span>：ちぎりお</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#042</span>：ちぎりき</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#017</span>：ちは</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#033</span>：ひさ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#035</span>：ひとは</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#099</span>：ひとも</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#050</span>：きみがためお</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#015</span>：きみがためは</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#091</span>：きり</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#096</span>：はなさ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#009</span>：はなの</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#002</span>：はるす</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#067</span>：はるの</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#047</span>：やえ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#059</span>：やす</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#032</span>：やまが</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#028</span>：やまざ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#093</span>：よのなかは</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#083</span>：よのなかよ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#085</span>：よも</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#062</span>：よを</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#051</span>：かく</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#006</span>：かさ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#098</span>：かぜそ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#048</span>：かぜを</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#049</span>：みかき</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#027</span>：みかの</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#090</span>：みせ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#014</span>：みち</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#094</span>：みよ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#073</span>：たか</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#055</span>：たき</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#004</span>：たご</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#016</span>：たち</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#089</span>：たま</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#034</span>：たれ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#041</span>：こい</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#029</span>：こころあ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#068</span>：こころに</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#097</span>：こぬ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#024</span>：この</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#010</span>：これ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#060</span>：おおえ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#095</span>：おおけ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#044</span>：おおこ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#005</span>：おく</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#026</span>：おぐ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#072</span>：おと</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#082</span>：おも</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#008</span>：わがい</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#092</span>：わがそ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#038</span>：わすら</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#054</span>：わすれ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#076</span>：わたのはらこ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#011</span>：わたのはらや</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#020</span>：わび</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#080</span>：ながか</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#084</span>：ながら</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#053</span>：なげき</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#086</span>：なげけ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#036</span>：なつ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#025</span>：なにし</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#088</span>：なにわえ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#019</span>：なにわが</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#043</span>：あい</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#079</span>：あきか</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#001</span>：あきの</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#052</span>：あけ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#039</span>：あさじ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#031</span>：あさぼらけあ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#064</span>：あさぼらけう</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#003</span>：あし</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#012</span>：あまつ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#007</span>：あまの</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#056</span>：あらざ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#069</span>：あらし</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#030</span>：ありあ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#058</span>：ありま</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#078</span>：あわじ</span> <span class="lab"></span> </div><div class="list-row unread-stable" title=""> <span><span class="mono">#045</span>：あわれ</span> <span class="lab"></span> </div>
+                        </div>
+                    </details>
+                </section>
+
+            </div>
+        </aside>
+
+        <aside class="side controls">
+            <!-- 右：ヘッダー（操作） -->
+            <button id="shuffleBtn">リセット</button>
+            <button id="changeVisible">表示 ⇄ 非表示</button>
+            <div class="text">札配置 暗記トレーニング ver1.00</div>
+        </aside>
+
+</div>
+    <script>
+        const halfRow = 3, ROWS = 6, COLS = 11;
+        const middle = halfRow * COLS, TOTAL = ROWS * COLS;
+        const MAX_IMAGES = 66;
+        const grid = document.getElementById('grid');
+        const shuffleBtn = document.getElementById('shuffleBtn');
+        const isVisibleBtn = document.getElementById('changeVisible');
+        const BASE_SCALE = 0.09;    // iPhone XR * 0.055
+
+        const kimariji1 = [
+            { id: 108, s: "う" }, { id: 109, s: "つ" }, { id: 110, s: "し" }, { id: 111, s: "も" }, { id: 112, s: "ゆ" },
+            { id: 113, s: "い" }, { id: 128, s: "いま" }, { id: 114, s: "ち" }, { id: 129, s: "ちぎ" },
+            { id: 115, s: "ひ" }, { id: 129, s: "ひと" }, { id: 116, s: "き" }, { id: 130, s: "きみ" },
+            { id: 117, s: "は" }, { id: 131, s: "はな" }, { id: 132, s: "はる" }, { id: 118, s: "や" }, { id: 133, s: "やま" },
+            { id: 119, s: "よ" }, { id: 134, s: "よの" }, { id: 120, s: "か" }, { id: 135, s: "かぜ" },
+            { id: 121, s: "み" }, { id: 136, s: "みか" }, { id: 122, s: "た" }, { id: 123, s: "こ" }, { id: 137, s: "ここ" },
+            { id: 124, s: "お" }, { id: 138, s: "おお" }, { id: 125, s: "わ" }, { id: 139, s: "わが" }, { id: 140, s: "わす" }, { id: 141, s: "わた" },
+            { id: 126, s: "な" }, { id: 142, s: "なが" }, { id: 143, s: "なげ" }, { id: 144, s: "なに" }, { id: 145, s: "なにわ" },
+            { id: 127, s: "あ" }, { id: 146, s: "あき" }, { id: 147, s: "あさ" }, { id: 148, s: "あさぼ" },
+            { id: 149, s: "あま" }, { id: 150, s: "あら" }, { id: 151, s: "あり" }, { id: 152, s: "あわ" }
+        ];
+        const kimariji2 = [
+            { id: 87, s: "む" }, { id: 18, s: "す" }, { id: 57, s: "め" }, { id: 22, s: "ふ" }, { id: 70, s: "さ" }, { id: 81, s: "ほ" }, { id: 77, s: "せ" },
+            { id: 74, s: "うか" }, { id: 65, s: "うら" }, { id: 23, s: "つき" }, { id: 13, s: "つく" }, { id: 40, s: "しの" }, { id: 37, s: "しら" }, { id: 100, s: "もも" }, { id: 66, s: "もろ" }, { id: 71, s: "ゆう" }, { id: 46, s: "ゆら" },
+            { id: 61, s: "いに" }, { id: 21, s: "いまこ" }, { id: 63, s: "いまは" }, { id: 75, s: "ちぎりお" }, { id: 42, s: "ちぎりき" }, { id: 17, s: "ちは" },
+            { id: 33, s: "ひさ" }, { id: 35, s: "ひとは" }, { id: 99, s: "ひとも" }, { id: 50, s: "きみがためお" }, { id: 15, s: "きみがためは" }, { id: 91, s: "きり" },
+            { id: 96, s: "はなさ" }, { id: 9, s: "はなの" }, { id: 2, s: "はるす" }, { id: 67, s: "はるの" }, { id: 47, s: "やえ" }, { id: 59, s: "やす" }, { id: 32, s: "やまが" }, { id: 28, s: "やまざ" },
+            { id: 93, s: "よのなかは" }, { id: 83, s: "よのなかよ" }, { id: 85, s: "よも" }, { id: 62, s: "よを" }, { id: 51, s: "かく" }, { id: 6, s: "かさ" }, { id: 98, s: "かぜそ" }, { id: 48, s: "かぜを" },
+            { id: 49, s: "みかき" }, { id: 27, s: "みかの" }, { id: 90, s: "みせ" }, { id: 14, s: "みち" }, { id: 94, s: "みよ" },
+            { id: 73, s: "たか" }, { id: 55, s: "たき" }, { id: 4, s: "たご" }, { id: 16, s: "たち" }, { id: 89, s: "たま" }, { id: 34, s: "たれ" },
+            { id: 41, s: "こい" }, { id: 29, s: "こころあ" }, { id: 68, s: "こころに" }, { id: 97, s: "こぬ" }, { id: 24, s: "この" }, { id: 10, s: "これ" },
+            { id: 60, s: "おおえ" }, { id: 95, s: "おおけ" }, { id: 44, s: "おおこ" }, { id: 5, s: "おく" }, { id: 26, s: "おぐ" }, { id: 72, s: "おと" }, { id: 82, s: "おも" },
+            { id: 8, s: "わがい" }, { id: 92, s: "わがそ" }, { id: 38, s: "わすら" }, { id: 54, s: "わすれ" }, { id: 76, s: "わたのはらこ" }, { id: 11, s: "わたのはらや" }, { id: 20, s: "わび" },
+            { id: 80, s: "ながか" }, { id: 84, s: "ながら" }, { id: 53, s: "なげき" }, { id: 86, s: "なげけ" }, { id: 36, s: "なつ" }, { id: 25, s: "なにし" }, { id: 88, s: "なにわえ" }, { id: 19, s: "なにわが" },
+            { id: 43, s: "あい" }, { id: 79, s: "あきか" }, { id: 1, s: "あきの" }, { id: 52, s: "あけ" }, { id: 39, s: "あさじ" }, { id: 31, s: "あさぼらけあ" }, { id: 64, s: "あさぼらけう" },
+            { id: 3, s: "あし" }, { id: 12, s: "あまつ" }, { id: 7, s: "あまの" }, { id: 56, s: "あらざ" }, { id: 69, s: "あらし" }, { id: 30, s: "ありあ" }, { id: 58, s: "ありま" }, { id: 78, s: "あわじ" }, { id: 45, s: "あわれ" }
+        ];
+
+        // blank.png の実寸を読み取り、CSS変数を更新
+        function setSizeFromFirst() {
+            return new Promise((resolve) => {
+                const probe = new Image();
+                probe.onload = () => {
+                    const w = probe.naturalWidth * BASE_SCALE;
+                    const h = probe.naturalHeight * BASE_SCALE;
+                    const r = document.documentElement.style;
+                    r.setProperty('--w', w + 'px');
+                    r.setProperty('--h', h + 'px');
+                    resolve({ w, h });
+                };
+                probe.onerror = () => resolve();
+                probe.src = 'cards/blank.png';
+            });
+        }
+        var cardsList = [];
+        var isVisible = true;
+        var noneCards = [
+            false, false, false, false, false, true, true, false, false, false, false,
+            false, false, false, false, true, true, true, false, false, false, false,
+            false, false, false, false, true, true, true, false, false, false, false,
+            false, false, false, false, true, true, true, false, false, false, false,
+            false, false, false, false, true, true, true, false, false, false, false,
+            false, false, false, false, true, true, false, false, false, false, false
+        ];
+        var notShow = [
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        ];
+
+        // 1..MAX_IMAGES をシャッフルして先頭 TOTAL 件を返す（重複なし）
+        function pickNumbers() {
+            cardsList = Array.from({ length: MAX_IMAGES }, (_, i) => i + 1);
+            for (let i = cardsList.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cardsList[i], cardsList[j]] = [cardsList[j], cardsList[i]];
+            }
+            return cardsList.slice(0, TOTAL);
+        }
+
+        // 画像を配置
+        function render() {
+            const nums = isVisible ? cardsList : notShow;
+            const frag = document.createDocumentFragment();
+            const appendCell = (i, cssPropertyName) => {
+                const cell = document.createElement('div');
+                cell.className = cssPropertyName;
+                const img = document.createElement('img');
+                img.alt = `${nums[i]}.png`;
+                if (!noneCards[i]) {
+                    img.src = `cards/${nums[i]}.png`;
+                    cell.appendChild(img);
+                }
+                frag.appendChild(cell);
+            };
+            for (let i = 0; i < middle; i++) appendCell(i, 'cell flip');
+            for (let i = middle; i < TOTAL; i++) appendCell(i, 'cell');
+
+            grid.innerHTML = '';
+            grid.appendChild(frag);
+        }
+
+        // イベント: シャッフル（再抽選して表示モードに戻す）
+        shuffleBtn.addEventListener('click', () => {
+            cardsList = pickNumbers();
+            isVisible = true;       // 再抽選後は表示状態に戻す（好みで変更可）
+            render();
+        });
+
+        // イベント: 表示 ⇄ 非表示
+        isVisibleBtn.addEventListener('click', () => {
+            isVisible = !isVisible; // トグル
+            render();
+        });
+
+
+
+        // 初期化
+        (async function init() {
+            await setSizeFromFirst();
+            cardsList = pickNumbers();
+            isVisible = true;
+            render();
+        })();
+    </script>
 </body>
-<script type="text/javascript">
-    var textarea = document.createElement("textarea");
-    document.body.appendChild(textarea);
-    textarea.innerHTML = document.body.innerHTML;
-</script>
 </html>
