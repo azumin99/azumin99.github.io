@@ -6,9 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root{
-      /* 1.png の実寸を読み取って上書きします */
-      --w: 200px; /* 仮の幅 */
-      --h: 300px; /* 仮の高さ */
+      /* hide.png の実寸を読み取って上書きします */
+      --w: 1px; /* 仮の幅 */
+      --h: 1px; /* 仮の高さ */
       --gap: 1px;
       --bg:#0f172a; --card:#111827; --ink:#e5e7eb;
     }
@@ -47,16 +47,16 @@
   </style>
 </head>
 <body>
+  <!--
   <header>
     <button id="shuffleBtn" title="並び替え">Shuffle</button>
     <span>6×11（計66枚）を 1.png〜100.png から重複なしでランダム配置します。</span>
   </header>
+  -->
 
   <div class="wrap">
     <div id="grid" class="grid" aria-live="polite"></div>
   </div>
-
-  <footer>画像サイズは 1.png の実寸を自動取得して揃えます。</footer>
 
   <script>
     const ROWS = 6, COLS = 11, TOTAL = ROWS * COLS; // 66
