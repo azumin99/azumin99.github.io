@@ -119,7 +119,7 @@ details summary{cursor:pointer;color:#cbd5e1}
   border-color:#22c55e;
   color:#ffffff;
 }
-.read-changed-ok{ /* 変化・正解（青） ←緑と明確に分離 */
+.read-changed-ok{ /* 変化・正解（青）
   background:rgba(59,130,246,.30);  /* blue-500 */
   border-color:#3b82f6;
   color:#ffffff;
