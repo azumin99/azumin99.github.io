@@ -7,8 +7,8 @@
   <style>
     :root{
       /* hide.png の実寸を読み取って上書きします */
-      --w: 200px; /* 仮の幅 */
-      --h: 300px; /* 仮の高さ */
+      --w: 1px; /* 仮の幅 */
+      --h: 1px; /* 仮の高さ */
       --gap: 1px;
       --bg:#0f172a; --card:#111827; --ink:#e5e7eb;
     }
@@ -64,12 +64,11 @@
     const grid = document.getElementById('grid');
     const shuffleBtn = document.getElementById('shuffleBtn');
 
-    // hide.png の実寸を読み取り、CSS変数を更新
+    // hide.png の実寸を読み取り、CSS変数を更新 (iPhone XR * 0.055)
     function setSizeFromFirst() {
       return new Promise((resolve) => {
         const probe = new Image();
         probe.onload = () => {
-          //iPhone XR * 0.055
           const w = probe.naturalWidth * 0.09;
           const h = probe.naturalHeight * 0.09;
           const r = document.documentElement.style;
