@@ -2,70 +2,123 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <title>競技かるた 決まり字変化流し</title>
+  <title>画像 6×11 ランダム配置</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="./contents.css">
+  <style>
+    :root{
+      /* 1.png の実寸を読み取って上書きします */
+      --w: 200px; /* 仮の幅 */
+      --h: 300px; /* 仮の高さ */
+      --gap: 8px;
+      --bg:#0f172a; --card:#111827; --ink:#e5e7eb;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; background:var(--bg); color:var(--ink);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      min-height:100vh; display:flex; flex-direction:column; gap:16px; padding:16px;
+    }
+    header{display:flex; gap:8px; align-items:center}
+    button{
+      cursor:pointer; padding:8px 12px; border:none; border-radius:10px;
+      background:#4f46e5; color:white; font-weight:600;
+    }
+    .wrap{
+      margin:auto; /* 画面中央寄せ */
+      background:var(--card); padding:16px; border-radius:16px;
+      box-shadow:0 10px 30px rgba(0,0,0,.25);
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(11, var(--w));
+      grid-auto-rows: var(--h);
+      gap: var(--gap);
+      justify-content:center;
+    }
+    .cell{
+      width:var(--w); height:var(--h);
+      background:#fff; border-radius:8px; overflow:hidden;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .cell img{
+      display:block; width:100%; height:100%; object-fit:cover;
+    }
+    footer{opacity:.7; font-size:12px; text-align:center}
+  </style>
 </head>
 <body>
+  <header>
+    <button id="shuffleBtn" title="並び替え">Shuffle</button>
+    <span>6×11（計66枚）を 1.png〜100.png から重複なしでランダム配置します。</span>
+  </header>
+
   <div class="wrap">
-    <div class="title">競技かるた 決まり字変化 トレーニングver2.26</div>
-    <div class="grid">
-      
-      <div class="card">
+    <div id="grid" class="grid" aria-live="polite"></div>
+  </div>
 
-        <div class="row" style="display:none;">
-          <div>
-            <div class="muted small">現在の出題（札番号）</div>
-            <div class="id mono" id="qid">-</div>
-          </div>
-          <div>
-            <div class="pill" id="statusPill">未開始</div>
-          </div>
-        </div>
+  <footer>画像サイズは 1.png の実寸を自動取得して揃えます。</footer>
 
-        <div class="row" style="margin-top:10px;">
-          <div class="muted small">進捗</div>
-          <div class="muted small"><span id="progressText">0 / 100</span></div>
-        </div>
-        <div class="progress" aria-hidden="true"><div id="bar" class="bar"></div></div>        
-        <div class="imgwrap"><img id="cardImg" alt="札画像" /></div>
-        <form id="answerForm" style="margin-top:16px;">
-          <div class="inputrow">
-            <input id="answerInput" type="text" placeholder="現時点の決まり字を入力（Enter可）" autocomplete="off" />
-            <button type="submit">答える</button>
-            <button type="button" class="secondary" id="skipBtn" title="答えずに次の出題へ">スキップ</button>
-          </div>
-        </form>
+  <script>
+    const ROWS = 6, COLS = 11, TOTAL = ROWS * COLS; // 66
+    const MAX_IMAGES = 100;
+    const grid = document.getElementById('grid');
+    const shuffleBtn = document.getElementById('shuffleBtn');
 
-        <div class="result" id="result" style="margin-top:10px;"></div>
-        <div class="small" style="display:none; margin-top:8px;">※※※※※※</div>
+    // 1.png の実寸を読み取り、CSS変数を更新
+    function setSizeFromFirst() {
+      return new Promise((resolve) => {
+        const probe = new Image();
+        probe.onload = () => {
+          const w = probe.naturalWidth, h = probe.naturalHeight;
+          const r = document.documentElement.style;
+          r.setProperty('--w', w + 'px');
+          r.setProperty('--h', h + 'px');
+          resolve({w,h});
+        };
+        probe.onerror = () => resolve(); // 読み取り失敗でも続行
+        probe.src = '1.png';
+      });
+    }
 
-        <div class="footer" style="margin-top:16px;">
-          <div class="small">残り札：<span id="remain">100</span> 枚</div>
-          <div class="row">
-            <button type="button" class="secondary" id="resetBtn">リセット</button>
-          </div>
-        </div>
+    // 1..MAX_IMAGES をシャッフルして先頭 TOTAL 件を返す（重複なし）
+    function pickNumbers() {
+      const arr = Array.from({length: MAX_IMAGES}, (_, i) => i + 1);
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr.slice(0, TOTAL);
+    }
 
-      </div>  <!-- 13行目 -->
+    // 画像を配置
+    function render() {
+      const nums = pickNumbers();
+      const frag = document.createDocumentFragment();
+      nums.forEach(n => {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        const img = document.createElement('img');
+        img.alt = `${n}.png`;
+        img.src = `${n}.png`;
+        cell.appendChild(img);
+        frag.appendChild(cell);
+      });
+      grid.innerHTML = '';
+      grid.appendChild(frag);
+    }
 
-      <div class="card">
-        <div class="muted small" style="display:none; margin-bottom:8px;">説明</div>
-        <div class="small" style="display:none;">※※※※※※※※※※※※※※※※※</div>
-        <details style="margin-top:10px;">
-          <summary style="display:inline-block;">決まり字一覧を表示</summary>
-          <button type="button" class="secondary" id="toggleOrderBtn" style="padding:6px 10px;font-size:10px;">並び替え</button>
-            <!--
-            <div class="row" style="margin-top:8px; justify-content:flex-end; gap:8px;">
-              <button type="button" class="secondary" id="toggleOrderBtn" style="padding:6px 10px;font-size:12px;">並び替え</button>
-            </div>
-            -->
-          <div id="list" class="small" style="margin-top:8px;max-height:460px;overflow:auto;"></div>
-        </details>
-      </div>
+    // もし「重複あり」にしたい場合は pickNumbers を下記のように変更してください:
+    // function pickNumbers(){
+    //   return Array.from({length: TOTAL}, () => Math.floor(Math.random()*MAX_IMAGES)+1);
+    // }
 
-    </div>  <!-- 12行目 -->
-  </div>  <!-- 10行目 -->
-  <script src="./common.js" defer></script>
+    shuffleBtn.addEventListener('click', render);
+
+    // 初期化
+    (async function init(){
+      await setSizeFromFirst();
+      render();
+    })();
+  </script>
 </body>
 </html>
