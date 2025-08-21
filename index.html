@@ -1,124 +1,39 @@
-<!doctype html>
-<html lang="ja">
-<head>
-  <meta charset="utf-8" />
-  <title>画像 6×11 ランダム配置</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    :root{
-      /* 1.png の実寸を読み取って上書きします */
-      --w: 200px; /* 仮の幅 */
-      --h: 300px; /* 仮の高さ */
-      --gap: 8px;
-      --bg:#0f172a; --card:#111827; --ink:#e5e7eb;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0; background:var(--bg); color:var(--ink);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-      min-height:100vh; display:flex; flex-direction:column; gap:16px; padding:16px;
-    }
-    header{display:flex; gap:8px; align-items:center}
-    button{
-      cursor:pointer; padding:8px 12px; border:none; border-radius:10px;
-      background:#4f46e5; color:white; font-weight:600;
-    }
-    .wrap{
-      margin:auto; /* 画面中央寄せ */
-      background:var(--card); padding:16px; border-radius:16px;
-      box-shadow:0 10px 30px rgba(0,0,0,.25);
-    }
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(11, var(--w));
-      grid-auto-rows: var(--h);
-      gap: var(--gap);
-      justify-content:center;
-    }
-    .cell{
-      width:var(--w); height:var(--h);
-      background:#fff; border-radius:8px; overflow:hidden;
-      display:flex; align-items:center; justify-content:center;
-    }
-    .cell img{
-      display:block; width:100%; height:100%; object-fit:cover;
-    }
-    footer{opacity:.7; font-size:12px; text-align:center}
-  </style>
-</head>
-<body>
-  <header>
-    <button id="shuffleBtn" title="並び替え">Shuffle</button>
-    <span>6×11（計66枚）を 1.png〜100.png から重複なしでランダム配置します。</span>
-  </header>
+<script>
+  const ROWS = 6, COLS = 11, TOTAL = ROWS * COLS; // 66
+  const MAX_IMAGES = 100;
+  const grid = document.getElementById('grid');
+  const shuffleBtn = document.getElementById('shuffleBtn');
 
-  <div class="wrap">
-    <div id="grid" class="grid" aria-live="polite"></div>
-  </div>
+  // 1.png の実寸を読み取り、CSS変数を更新
+  function setSizeFromFirst() {
+    return new Promise((resolve) => {
+      const probe = new Image();
+      probe.onload = () => {
+        const w = probe.naturalWidth, h = probe.naturalHeight;
+        const r = document.documentElement.style;
+        r.setProperty('--w', w + 'px');
+        r.setProperty('--h', h + 'px');
+        resolve({w,h});
+      };
+      probe.onerror = () => resolve();
+      probe.src = 'cards/1.png';  // ← cards フォルダに変更
+    });
+  }
 
-  <footer>画像サイズは 1.png の実寸を自動取得して揃えます。</footer>
-
-  <script>
-    const ROWS = 6, COLS = 11, TOTAL = ROWS * COLS; // 66
-    const MAX_IMAGES = 100;
-    const grid = document.getElementById('grid');
-    const shuffleBtn = document.getElementById('shuffleBtn');
-
-    // 1.png の実寸を読み取り、CSS変数を更新
-    function setSizeFromFirst() {
-      return new Promise((resolve) => {
-        const probe = new Image();
-        probe.onload = () => {
-          const w = probe.naturalWidth, h = probe.naturalHeight;
-          const r = document.documentElement.style;
-          r.setProperty('--w', w + 'px');
-          r.setProperty('--h', h + 'px');
-          resolve({w,h});
-        };
-        probe.onerror = () => resolve(); // 読み取り失敗でも続行
-        probe.src = '1.png';
-      });
-    }
-
-    // 1..MAX_IMAGES をシャッフルして先頭 TOTAL 件を返す（重複なし）
-    function pickNumbers() {
-      const arr = Array.from({length: MAX_IMAGES}, (_, i) => i + 1);
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-      return arr.slice(0, TOTAL);
-    }
-
-    // 画像を配置
-    function render() {
-      const nums = pickNumbers();
-      const frag = document.createDocumentFragment();
-      nums.forEach(n => {
-        const cell = document.createElement('div');
-        cell.className = 'cell';
-        const img = document.createElement('img');
-        img.alt = `${n}.png`;
-        img.src = `${n}.png`;
-        cell.appendChild(img);
-        frag.appendChild(cell);
-      });
-      grid.innerHTML = '';
-      grid.appendChild(frag);
-    }
-
-    // もし「重複あり」にしたい場合は pickNumbers を下記のように変更してください:
-    // function pickNumbers(){
-    //   return Array.from({length: TOTAL}, () => Math.floor(Math.random()*MAX_IMAGES)+1);
-    // }
-
-    shuffleBtn.addEventListener('click', render);
-
-    // 初期化
-    (async function init(){
-      await setSizeFromFirst();
-      render();
-    })();
-  </script>
-</body>
-</html>
+  // 画像を配置
+  function render() {
+    const nums = pickNumbers();
+    const frag = document.createDocumentFragment();
+    nums.forEach(n => {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      const img = document.createElement('img');
+      img.alt = `${n}.png`;
+      img.src = `cards/${n}.png`; // ← cards フォルダに変更
+      cell.appendChild(img);
+      frag.appendChild(cell);
+    });
+    grid.innerHTML = '';
+    grid.appendChild(frag);
+  }
+</script>
