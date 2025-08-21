@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <title>札配置 暗記トレーニング ver1.09</title>
+  <title>札配置 暗記トレーニング ver1.10</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root{
@@ -69,8 +69,9 @@
       return new Promise((resolve) => {
         const probe = new Image();
         probe.onload = () => {
-          const w = probe.naturalWidth * 0.055;
-          const h = probe.naturalHeight * 0.055;
+          //iPhone XR * 0.055
+          const w = probe.naturalWidth * 0.09;
+          const h = probe.naturalHeight * 0.09;
           const r = document.documentElement.style;
           r.setProperty('--w', w + 'px');
           r.setProperty('--h', h + 'px');
