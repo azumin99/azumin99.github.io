@@ -2,13 +2,13 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <title>画像 6×11 ランダム配置</title>
+  <title>札配置 暗記トレーニング ver1.09</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root{
       /* hide.png の実寸を読み取って上書きします */
-      --w: 1px; /* 仮の幅 */
-      --h: 1px; /* 仮の高さ */
+      --w: 200px; /* 仮の幅 */
+      --h: 300px; /* 仮の高さ */
       --gap: 1px;
       --bg:#0f172a; --card:#111827; --ink:#e5e7eb;
     }
@@ -64,7 +64,7 @@
     const grid = document.getElementById('grid');
     const shuffleBtn = document.getElementById('shuffleBtn');
 
-    // 1.png の実寸を読み取り、CSS変数を更新
+    // hide.png の実寸を読み取り、CSS変数を更新
     function setSizeFromFirst() {
       return new Promise((resolve) => {
         const probe = new Image();
@@ -77,7 +77,7 @@
           resolve({w,h});
         };
         probe.onerror = () => resolve(); // 読み取り失敗でも続行
-        probe.src = 'cards/1.png';
+        probe.src = 'cards/hide.png';
       });
     }
 
