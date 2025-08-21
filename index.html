@@ -69,7 +69,8 @@
       return new Promise((resolve) => {
         const probe = new Image();
         probe.onload = () => {
-          const w = probe.naturalWidth, h = probe.naturalHeight;
+          const w = probe.naturalWidth * 0.1;
+          const h = probe.naturalHeight * 0.1;
           const r = document.documentElement.style;
           r.setProperty('--w', w + 'px');
           r.setProperty('--h', h + 'px');
