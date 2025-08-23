@@ -1,3 +1,42 @@
+(() => {
+  const KEY = 'karutaSettings.v1';
+  const ta = document.querySelector('.title-box textarea');
+  if(!ta) return;
+
+  const load = () => {
+    try{ return JSON.parse(localStorage.getItem(KEY)) || {}; }
+    catch{ return {}; }
+  };
+
+  const asOnOff = v => (v ? 'ON' : 'OFF');
+  const dirLabel = v => ({random:'ランダム', normal:'正方向', reverse:'逆さま'}[v] || 'ランダム');
+
+  const render = () => {
+    const s = load();
+    const lines = [
+      `向き,${dirLabel(s.direction)}`,
+      `変化,${asOnOff(!!s.changing)}`,
+      `自動,${asOnOff(!!s.autoAdvance)}`,
+      `待機,${(s.waitMs ?? 500)}ms`,
+      `枚数,${(s.count ?? 100)}`,
+      `限定,${asOnOff(!!s.allOrPart)}`,
+      '',
+      '決まり字一覧(番号だけ)',
+      Array.isArray(s.selectedIds)
+        ? s.selectedIds.map(Number).sort((a,b)=>a-b).join(',')
+        : ''
+    ];
+    ta.value = lines.join('\n');
+  };
+
+  // 初期表示
+  render();
+  // 設定画面で変更→戻ってきたとき等、他タブからの更新も反映
+  window.addEventListener('storage', (ev) => {
+    if(ev.key === KEY) render();
+  });
+})();
+
 const CARDS = [
   {id:87, s:"む"},{id:18, s:"す"},{id:57, s:"め"},{id:22, s:"ふ"},{id:70, s:"さ"},{id:81, s:"ほ"},{id:77, s:"せ"},
   {id:74, s:"うか"},{id:65, s:"うら"},{id:23, s:"つき"},{id:13, s:"つく"},{id:40, s:"しの"},{id:37, s:"しら"},{id:100, s:"もも"},{id:66, s:"もろ"},{id:71, s:"ゆう"},{id:46, s:"ゆら"},
