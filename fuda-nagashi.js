@@ -16,7 +16,7 @@ let AUTO_NEXT_MS = 0;
 
   const render = () => {
     const s = load();
-    if(s.changing) AUTO_NEXT_MS = s.waitMs;
+    if(s.autoAdvance) AUTO_NEXT_MS = s.waitMs;
     const lines = [
       `向き,${dirLabel(s.direction)}`,
       `変化,${asOnOff(!!s.changing)}`,
