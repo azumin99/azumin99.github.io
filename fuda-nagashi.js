@@ -1,3 +1,6 @@
+// ====== 追加：自動で次へ進むまでの待ち時間（ミリ秒）。0にすると自動で進まない ======
+const AUTO_NEXT_MS = 0;
+
 (() => {
   const KEY = 'karutaSettings.v1';
   const ta = document.querySelector('.title-box textarea');
@@ -13,6 +16,7 @@
 
   const render = () => {
     const s = load();
+    if(s.changing) AUTO_NEXT_MS = s.waitMs;
     const lines = [
       `向き,${dirLabel(s.direction)}`,
       `変化,${asOnOff(!!s.changing)}`,
@@ -247,9 +251,6 @@ const showQuestion = () => {
   }
   renderList();
 };
-
-// ====== 追加：自動で次へ進むまでの待ち時間（ミリ秒）。0にすると自動で進まない ======
-const AUTO_NEXT_MS = 3500;
 
 // submitAnswer（判定を表示→少し待ってから次へ）
 const submitAnswer = () => {
