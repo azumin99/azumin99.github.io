@@ -2,6 +2,7 @@
 let AUTO_NEXT_MS = 0;
 let CARDS_COUNT = 100;
 let CARDS_DIRECTION = 'normal';
+const rotateEl = document.getElementById("rotate");
 
 (() => {
   const KEY = 'karutaSettings.v1';
@@ -21,6 +22,7 @@ let CARDS_DIRECTION = 'normal';
     if(s.autoAdvance) AUTO_NEXT_MS = s.waitMs;
     CARDS_COUNT = s.count;
     CARDS_DIRECTION = s.direction;
+    if(CARDS_DIRECTION === 'reverse') { rotateEl.className = 'imgwrap upside-down'; }
     
     const lines = [
       `向き,${dirLabel(s.direction)}`,
