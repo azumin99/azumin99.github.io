@@ -250,8 +250,9 @@ const showQuestion = () => {
     imgEl.style.visibility = "hidden";
     imgEl.onload = () => { 
       imgEl.style.visibility = "visible"; 
-      if(CARDS_DIRECTION === 'random' && Math.random() < 0.5 && rotateEl) { 
-        rotateEl.className = 'imgwrap upside-down'; 
+      if(CARDS_DIRECTION === 'random' && rotateEl) {
+        if(Math.random() < 0.5) { rotateEl.className = 'imgwrap'; }
+        else { rotateEl.className = 'imgwrap upside-down'; }
       }
     };
     imgEl.onerror = () => {
