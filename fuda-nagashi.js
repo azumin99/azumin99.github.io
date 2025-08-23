@@ -248,14 +248,18 @@ const showQuestion = () => {
   // ▼ 画像切り替え（同階層の id.png を表示）
   if (imgEl) {
     imgEl.style.visibility = "hidden";
-    imgEl.onload = () => { imgEl.style.visibility = "visible"; };
+    imgEl.onload = () => { 
+      imgEl.style.visibility = "visible"; 
+      if(CARDS_DIRECTION === 'random' && Math.random() < 0.5 && rotateEl) { 
+        rotateEl.className = 'imgwrap upside-down'; 
+      }
+    };
     imgEl.onerror = () => {
       imgEl.style.visibility = "visible";
       imgEl.alt = `画像が見つかりません（${id}.png）`;
     };
     imgEl.src = `./cards/${id}.png`;
     imgEl.alt = `札画像 ${id}.png`;
-    //if(CARDS_DIRECTION === 'reverse') { imgEl.className = 'imgwrap.flip img'; }
   }
   renderList();
 };
