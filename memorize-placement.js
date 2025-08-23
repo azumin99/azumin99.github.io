@@ -1,3 +1,42 @@
+(() => {
+  const KEY = 'karutaSettings.v1';
+  const ta = document.querySelector('.title-box textarea');
+  if(!ta) return;
+
+  const load = () => {
+    try{ return JSON.parse(localStorage.getItem(KEY)) || {}; }
+    catch{ return {}; }
+  };
+
+  const asOnOff = v => (v ? 'ON' : 'OFF');
+  const dirLabel = v => ({random:'ランダム', normal:'正方向', reverse:'逆さま'}[v] || 'ランダム');
+
+  const initRender = () => {
+    const s = load();
+    const lines = [
+      `向き,${dirLabel(s.direction)}`,
+      `変化,${asOnOff(!!s.changing)}`,
+      `自動,${asOnOff(!!s.autoAdvance)}`,
+      `待機,${(s.waitMs ?? 500)}ms`,
+      `枚数,${(s.count ?? 100)}`,
+      `限定,${asOnOff(!!s.allOrPart)}`,
+      '',
+      '決まり字一覧(番号だけ)',
+      Array.isArray(s.selectedIds)
+        ? s.selectedIds.map(Number).sort((a,b)=>a-b).join(',')
+        : ''
+    ];
+    ta.value = lines.join('\n');
+  };
+
+  // 初期表示
+  initRender();
+  // 設定画面で変更→戻ってきたとき等、他タブからの更新も反映
+  window.addEventListener('storage', (ev) => {
+    if(ev.key === KEY) initRender();
+  });
+})();
+
 const kimariji1 = [
     { id: 108, s: "う" }, { id: 109, s: "つ" }, { id: 110, s: "し" }, { id: 111, s: "も" }, { id: 112, s: "ゆ" },
     { id: 113, s: "い" }, { id: 128, s: "いま" }, { id: 114, s: "ち" }, { id: 129, s: "ちぎ" },
