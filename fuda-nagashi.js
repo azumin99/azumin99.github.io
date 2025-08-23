@@ -1,6 +1,7 @@
 // ====== 追加：自動で次へ進むまでの待ち時間（ミリ秒）。0にすると自動で進まない ======
 let AUTO_NEXT_MS = 0;
 let CARDS_COUNT = 100;
+let CARDS_DIRECTION = 'normal';
 
 (() => {
   const KEY = 'karutaSettings.v1';
@@ -19,6 +20,8 @@ let CARDS_COUNT = 100;
     const s = load();
     if(s.autoAdvance) AUTO_NEXT_MS = s.waitMs;
     CARDS_COUNT = s.count;
+    CARDS_DIRECTION = s.direction;
+    
     const lines = [
       `向き,${dirLabel(s.direction)}`,
       `変化,${asOnOff(!!s.changing)}`,
@@ -221,7 +224,7 @@ const showQuestion = () => {
   if (nextTimer) { clearTimeout(nextTimer); nextTimer = null; }
   skipBtn.textContent = "スキップ";
   
-  if (idx >= reads.length) {
+  if (idx >= CARDS_COUNT) {
     qidEl.textContent = "終了";
     statusPill.textContent = "完了";
     resultEl.innerHTML = `<span class="ok">お疲れさまでした！</span> 全問終了です。`;
@@ -250,6 +253,7 @@ const showQuestion = () => {
     };
     imgEl.src = `./cards/${id}.png`;
     imgEl.alt = `札画像 ${id}.png`;
+    //if(CARDS_DIRECTION === 'reverse') { imgEl.className = 'imgwrap.flip img'; }
   }
   renderList();
 };
