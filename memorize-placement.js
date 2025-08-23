@@ -1,3 +1,4 @@
+// --------- memorize-placement.js ---------
 (() => {
   const KEY = 'karutaSettings.v1';
   const ta = document.querySelector('.title-box textarea');
