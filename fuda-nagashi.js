@@ -1,5 +1,6 @@
 // ====== 追加：自動で次へ進むまでの待ち時間（ミリ秒）。0にすると自動で進まない ======
 let AUTO_NEXT_MS = 0;
+let CARDS_COUNT = 100;
 
 (() => {
   const KEY = 'karutaSettings.v1';
@@ -17,6 +18,7 @@ let AUTO_NEXT_MS = 0;
   const render = () => {
     const s = load();
     if(s.autoAdvance) AUTO_NEXT_MS = s.waitMs;
+    CARDS_COUNT = s.count;
     const lines = [
       `向き,${dirLabel(s.direction)}`,
       `変化,${asOnOff(!!s.changing)}`,
@@ -158,8 +160,8 @@ const currentId = () => reads[idx];
 const curS = () => id2s.get(currentId());
 
 const updateProgress = () => {
-  progressTextEl.textContent = `${idx} / 100`;
-  const pct = (idx / 100) * 100;
+  progressTextEl.textContent = `${idx} / ${CARDS_COUNT}`;
+  const pct = (idx / CARDS_COUNT) * 100;
   barEl.style.width = `${pct}%`;
   remainEl.textContent = remaining.length.toString();
 };
