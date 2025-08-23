@@ -1,5 +1,5 @@
 // ====== 追加：自動で次へ進むまでの待ち時間（ミリ秒）。0にすると自動で進まない ======
-const AUTO_NEXT_MS = 0;
+let AUTO_NEXT_MS = 0;
 
 (() => {
   const KEY = 'karutaSettings.v1';
