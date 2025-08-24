@@ -1,26 +1,27 @@
 // --------- fuda-nagashi.js ---------
 
-// ====== 追加：自動で次へ進むまでの待ち時間（ミリ秒）。0にすると自動で進まない ======
 let AUTO_NEXT_MS = 0;
 let CARDS_COUNT = 100;
 let CARDS_DIRECTION = 'normal';
 const rotateEl = document.getElementById("rotate");
 
+const KEY = 'karutaSettings.v1';
+const loadSettings = () => {
+    try {
+        return JSON.parse(localStorage.getItem(KEY)) || {};
+    } catch {
+        return {};
+    }
+};
+const s = loadSettings();
+
 (() => {
-  const KEY = 'karutaSettings.v1';
   const ta = document.querySelector('.title-box textarea');
   if(!ta) return;
 
-  const load = () => {
-    try{ return JSON.parse(localStorage.getItem(KEY)) || {}; }
-    catch{ return {}; }
-  };
-
   const asOnOff = v => (v ? 'ON' : 'OFF');
   const dirLabel = v => ({random:'ランダム', normal:'正方向', reverse:'逆さま'}[v] || 'ランダム');
-
   const render = () => {
-    const s = load();
     if(s.autoAdvance) AUTO_NEXT_MS = s.waitMs;
     CARDS_COUNT = s.count;
     CARDS_DIRECTION = s.direction;
@@ -50,22 +51,26 @@ const rotateEl = document.getElementById("rotate");
   });
 })();
 
-const CARDS = [
-  {id:87, s:"む"},{id:18, s:"す"},{id:57, s:"め"},{id:22, s:"ふ"},{id:70, s:"さ"},{id:81, s:"ほ"},{id:77, s:"せ"},
-  {id:74, s:"うか"},{id:65, s:"うら"},{id:23, s:"つき"},{id:13, s:"つく"},{id:40, s:"しの"},{id:37, s:"しら"},{id:100, s:"もも"},{id:66, s:"もろ"},{id:71, s:"ゆう"},{id:46, s:"ゆら"},
-  {id:61, s:"いに"},{id:21, s:"いまこ"},{id:63, s:"いまは"},{id:75, s:"ちぎりお"},{id:42, s:"ちぎりき"},{id:17, s:"ちは"},
-  {id:33, s:"ひさ"},{id:35, s:"ひとは"},{id:99, s:"ひとも"},{id:50, s:"きみがためお"},{id:15, s:"きみがためは"},{id:91, s:"きり"},
-  {id:96, s:"はなさ"},{id:9, s:"はなの"},{id:2, s:"はるす"},{id:67, s:"はるの"},{id:47, s:"やえ"},{id:59, s:"やす"},{id:32, s:"やまが"},{id:28, s:"やまざ"},
-  {id:93, s:"よのなかは"},{id:83, s:"よのなかよ"},{id:85, s:"よも"},{id:62, s:"よを"},{id:51, s:"かく"},{id:6, s:"かさ"},{id:98, s:"かぜそ"},{id:48, s:"かぜを"},
-  {id:49, s:"みかき"},{id:27, s:"みかの"},{id:90, s:"みせ"},{id:14, s:"みち"},{id:94, s:"みよ"},
-  {id:73, s:"たか"},{id:55, s:"たき"},{id:4, s:"たご"},{id:16, s:"たち"},{id:89, s:"たま"},{id:34, s:"たれ"},
-  {id:41, s:"こい"},{id:29, s:"こころあ"},{id:68, s:"こころに"},{id:97, s:"こぬ"},{id:24, s:"この"},{id:10, s:"これ"},
-  {id:60, s:"おおえ"},{id:95, s:"おおけ"},{id:44, s:"おおこ"},{id:5, s:"おく"},{id:26, s:"おぐ"},{id:72, s:"おと"},{id:82, s:"おも"},
-  {id:8, s:"わがい"},{id:92, s:"わがそ"},{id:38, s:"わすら"},{id:54, s:"わすれ"},{id:76, s:"わたのはらこ"},{id:11, s:"わたのはらや"},{id:20, s:"わび"},
-  {id:80, s:"ながか"},{id:84, s:"ながら"},{id:53, s:"なげき"},{id:86, s:"なげけ"},{id:36, s:"なつ"},{id:25, s:"なにし"},{id:88, s:"なにわえ"},{id:19, s:"なにわが"},
-  {id:43, s:"あい"},{id:79, s:"あきか"},{id:1, s:"あきの"},{id:52, s:"あけ"},{id:39, s:"あさじ"},{id:31, s:"あさぼらけあ"},{id:64, s:"あさぼらけう"},
-  {id:3, s:"あし"},{id:12, s:"あまつ"},{id:7, s:"あまの"},{id:56, s:"あらざ"},{id:69, s:"あらし"},{id:30, s:"ありあ"},{id:58, s:"ありま"},{id:78, s:"あわじ"},{id:45, s:"あわれ"}
-];
+const CARDS = window.KIMARIJI_ITEMS;
+const ALL_IDS_FN = window.KIMARIJI_ALL_IDS || (() => CARDS.map(x => x.id));
+const ALL_IDS = ALL_IDS_FN();
+
+
+// 今回の「対象ID集合」を決定（包含方式：選択があればそのみ／なければ全量）
+const decideAllowedIds = () => {
+    //const s = loadSettings();
+    if (s.allOrPart && Array.isArray(s.selectedIds) && s.selectedIds.length > 0) {
+        const want = new Set(s.selectedIds.map(Number));
+        return ALL_IDS.filter(id => want.has(id));
+    }
+    return ALL_IDS.slice();
+};
+
+// 今回セッションの「対象カード配列」
+const sessionCards = () => {
+    const allowed = new Set(decideAllowedIds());
+    return CARDS.filter(c => allowed.has(c.id));
+};
 
 // ====== 文字単位ユーティリティ（UTF-8/16のサロゲート対策に Array.from を使う）======
 const toChars = (s) => Array.from(s); // code point 単位
@@ -181,7 +186,8 @@ const renderList = () => {
   let items;
   if (listMode === "initial") {
     // 初期状態：全100枚（既存順）
-    items = CARDS.slice();
+    //items = CARDS.slice();
+    items = sessionCards();
   } else {
     // 読み上げ順：既読だけ（reads の先頭 idx 件）
     // ※ reads は提示順、idx は既に読み上げ済みの枚数
@@ -306,31 +312,46 @@ const submitAnswer = () => {
   }
 };
 
+// スキップ：未回答のみ誤答扱い。判定済み（正解/不正解）は上書きしないで次へ。
 const skipQuestion = () => {
-  if (idx >= reads.length) return;
-  const s = curS();
-  const changedAtRead = (expectedPrefix(s) !== s);
-  history.set(currentId(), { changedAtRead, correct: false }); // スキップ＝誤答扱い
-  advanceToNext();
+    if (idx >= reads.length) return;
+    const id = currentId();
+    // 既に submitAnswer 済みなら（=履歴がある）既存の判定を尊重して進むだけ
+    if (history.has(id)) {
+        advanceToNext();
+        return;
+    }
+    // 未回答でのスキップは誤答として記録
+    const s = curS();
+    const changedAtRead = (expectedPrefix(s) !== s);
+    history.set(id, { changedAtRead, correct: false });
+    advanceToNext();
 };
 
 
 const resetAll = () => {
-  remaining = CARDS.slice();
-  id2s = new Map(CARDS.map(c => [c.id, c.s]));
-  reads = shuffle(Array.from({length:100}, (_,i)=>i+1));
-  idx = 0;
+    //const s = loadSettings();
+    const allowedIds = decideAllowedIds();             // 今回対象ID
+    const tmpCards = sessionCards();                      // 今回対象カード
 
-  if (nextTimer) { clearTimeout(nextTimer); nextTimer = null; }
-  advanced = false;
-  awaitingNext = false;
-  history.clear();
+    const want = (s && Number.isInteger(s.count)) ? s.count : 100;
+    CARDS_COUNT = Math.max(1, Math.min(want, allowedIds.length));
+
+    remaining = tmpCards.slice();
+    id2s = new Map(tmpCards.map(c => [c.id, c.s]));
+    reads = shuffle(allowedIds.slice());
+    idx = 0;
+
+    if (nextTimer) { clearTimeout(nextTimer); nextTimer = null; }
+    advanced = false;
+    awaitingNext = false;
+    history.clear();
   
-  inputEl.disabled = false;
-  statusPill.textContent = "準備完了";
-  skipBtn.textContent = "スキップ";
-  updateProgress();
-  showQuestion();
+    inputEl.disabled = false;
+    statusPill.textContent = "準備完了";
+    skipBtn.textContent = "スキップ";
+    updateProgress();
+    showQuestion();
 };
 
 
