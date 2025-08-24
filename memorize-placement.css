@@ -88,6 +88,11 @@ button {
     align-items: center;
     justify-content: center;
 }
+.cell.none {
+    /* レイアウトの“位置”は保持しつつ、見た目は消す */
+    visibility: hidden; /* 余白は確保、見た目だけ非表示 */
+    pointer-events: none;
+}
 .cell img {
     display: block;
     width: 100%;
