@@ -29,5 +29,15 @@ window.KIMARIJI_GROUPS = [
     { id: 149, s: "あま" }, { id: 150, s: "あら" }, { id: 151, s: "あり" }, { id: 152, s: "あわ" }
 ];
 
-// 便利な補助（全ID配列）
+// 便利な補助
+window.STANDALONE_IDS = [87, 18, 57, 22, 70, 81, 77];
 window.KIMARIJI_ALL_IDS = () => window.KIMARIJI_ITEMS.map(x => x.id);
+
+window.NONE_CARDS = [
+    false, false, false, false, false, true, true, false, false, false, false,
+    false, false, false, false, true, true, true, false, false, false, false,
+    false, false, false, false, true, true, true, false, false, false, false,
+    false, false, false, false, true, true, true, false, false, false, false,
+    false, false, false, false, true, true, true, false, false, false, false,
+    false, false, false, false, true, true, false, false, false, false, false
+];
